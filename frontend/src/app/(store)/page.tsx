@@ -1,14 +1,14 @@
 // src/app/(store)/page.tsx
 
 import { Separator } from "@/src/components/ui/separator";
-import { HeroBanner } from "./_components/HeroBanner";
-import { FlashSales } from "./_components/FlashSales";
-import { CategoryBrowse } from "./_components/CategoryBrowse";
-import { BestSelling } from "./_components/BestSelling";
-import { MusicBanner } from "./_components/MusicBanner";
-import { ExploreProducts } from "./_components/ExploreProducts";
-import { NewArrival } from "./_components/NewArrival";
-import { Features } from "./_components/Features";
+import { HeroBanner } from "./components/HeroBanner";
+import { FlashSales } from "./components/FlashSales";
+import { CategoryBrowse } from "./components/CategoryBrowse";
+import { BestSelling } from "./components/BestSelling";
+import { MusicBanner } from "./components/MusicBanner";
+import { ExploreProducts } from "./components/ExploreProducts";
+import { NewArrival } from "./components/NewArrival";
+import { Features } from "./components/Features";
 
 /**
  * Đây là Trang chủ (Homepage)
