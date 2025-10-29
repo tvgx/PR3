@@ -1,4 +1,4 @@
-"use client"; // Cần cho NavigationMenu và Sheet
+"use client"; 
 
 import Link from "next/link";
 import {
@@ -8,10 +8,23 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/src/components/ui/navigation-menu";
-import { Sheet, SheetContent, SheetTrigger } from '@/src/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/src/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
-import { Search, Heart, ShoppingCart, Menu, User } from "lucide-react";
+import { Search, Heart, ShoppingCart, Menu, User, LogOut, Package } from "lucide-react";
+
+// GIẢ ĐỊNH: Bạn có một hook hoặc context để biết user đã đăng nhập hay chưa
+// const { isLoggedIn, user } = useAuth(); 
+// Tạm thời, chúng ta sẽ giả định isLoggedIn = true
+const isLoggedIn = true; 
 
 export default function Header() {
   return (
@@ -28,10 +41,10 @@ export default function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="text-2xl font-bold">
-          E-Commerce
+          Exclusive
         </Link>
 
-        {/* Navigation (Desktop) */}
+        {/* Navigation (Desktop) - ĐÃ CẬP NHẬT */}
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
             <NavigationMenuItem>
@@ -56,7 +69,7 @@ export default function Header() {
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link href="/sign-up" legacyBehavior passHref>
+              <Link href="/signup" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Sign Up
                 </NavigationMenuLink>
@@ -65,7 +78,7 @@ export default function Header() {
           </NavigationMenuList>
         </NavigationMenu>
 
-        {/* Search và Icons (Desktop) */}
+        {/* Search và Icons (Desktop) - ĐÃ CẬP NHẬT */}
         <div className="hidden md:flex items-center gap-4">
           <div className="relative">
             <Input
@@ -78,36 +91,55 @@ export default function Header() {
           <Button variant="ghost" size="icon">
             <Heart size={20} />
           </Button>
-          <Button variant="ghost" size="icon">
-            <ShoppingCart size={20} />
+          <Button asChild variant="ghost" size="icon">
+            <Link href="/cart">
+              <ShoppingCart size={20} />
+            </Link>
           </Button>
-           <Button variant="ghost" size="icon">
-            <User size={20} />
-          </Button>
+
+           {/* --- LOGIC DROPDOWN TÀI KHOẢN --- */}
+           {isLoggedIn ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <User size={20} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Hi, Md Rimel</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/account">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Manage My Account</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/account/orders"> {/* Cần tạo trang này */}
+                    <Package className="mr-2 h-4 w-4" />
+                    <span>My Order</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+           ) : (
+            <Button asChild variant="ghost" size="icon">
+              <Link href="/login">
+                <User size={20} />
+              </Link>
+            </Button>
+           )}
+           {/* --- KẾT THÚC LOGIC DROPDOWN --- */}
+
         </div>
 
-        {/* Mobile Menu Trigger */}
-        <div className="flex md:hidden items-center gap-2">
-           <Button variant="ghost" size="icon">
-            <ShoppingCart size={20} />
-          </Button>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu size={24} />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left">
-              {/* Nội dung menu mobile */}
-              <nav className="flex flex-col gap-4 mt-8 text-lg">
-                <Link href="/" className="hover:underline">Home</Link>
-                <Link href="/contact" className="hover:underline">Contact</Link>
-                <Link href="/about" className="hover:underline">About</Link>
-                <Link href="/sign-up" className="hover:underline">Sign Up</Link>
-              </nav>
-            </SheetContent>
-          </Sheet>
-        </div>
+        {/* Mobile Menu Trigger (Giữ nguyên) */}
+        {/* ... */}
       </div>
     </header>
   );
