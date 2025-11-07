@@ -31,6 +31,10 @@ const productSchema = new mongoose.Schema(
     imageUrl: {
       type: String,
     },
+    tags: { // <-- THÊM TRƯỜNG MỚI
+      type: [String],
+      index: true,
+    },
   },
   {
     timestamps: true, // Tự động thêm createdAt và updatedAt

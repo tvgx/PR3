@@ -28,10 +28,16 @@ const deleteProduct = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+const getCategories = catchAsync(async (req, res) => {
+  const categories = await productService.getProductCategories();
+  res.send(categories);
+});
+
 module.exports = {
   createProduct,
   getProducts,
   getProduct,
   updateProduct,
   deleteProduct,
+  getCategories,
 };

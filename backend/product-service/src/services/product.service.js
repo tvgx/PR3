@@ -15,8 +15,25 @@ const createProduct = async (productBody) => {
  * Lấy danh sách sản phẩm (có thể thêm filter, pagination ở đây)
  * @returns {Promise<Product[]>}
  */
-const queryProducts = async () => {
-  const products = await Product.find();
+const queryProducts = async (filters) => {
+  let query = Product.find();
+
+  // Xử lý filter (ví dụ)
+  if (filters.category) {
+    query = query.where('category').equals(filters.category);
+  }
+  
+  // Xử lý tag (MỚI)
+  if (filters.tag) {
+    query = query.where('tags').in([filters.tag]);
+  }
+
+  // Xử lý limit
+  if (filters.limit) {
+    query = query.limit(parseInt(filters.limit, 10));
+  }
+
+  const products = await query.exec();
   return products;
 };
 
@@ -56,10 +73,20 @@ const deleteProductById = async (id) => {
   await product.deleteOne();
 };
 
+/** Lấy danh sách các danh mục duy nhất
+ * @returns {Promise<string[]>}
+ */
+const getProductCategories = async () => {
+  // .distinct() trả về một mảng các giá trị duy nhất cho trường 'category'
+  const categories = await Product.distinct('category');
+  return categories;
+};
+
 module.exports = {
   createProduct,
   queryProducts,
   getProductById,
   updateProductById,
   deleteProductById,
+  getProductCategories,
 };

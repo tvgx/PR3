@@ -6,6 +6,8 @@ const { requireAuth, isAdmin } = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 
+router.route('/categories').get(productController.getCategories);
+
 router
   .route('/')
   .post(requireAuth, isAdmin, validate(productValidation.createProduct), productController.createProduct)
