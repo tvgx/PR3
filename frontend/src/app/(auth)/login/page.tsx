@@ -1,17 +1,52 @@
-"use client"; // Cần cho các hook (useState, v.v.) sau này
+"use client";
 
 import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
 import Link from "next/link";
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner"; // Import toast
+import apiClient from "@/src/lib/api-client"; // Import axios
+import { useAuthStore } from "@/src/store/auth.store"; // Import auth store
+import { Input } from "@/src/components/ui/input";
 
 export default function LogInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
+  const setAuth = useAuthStore((state) => state.setAuth); // Lấy hàm setAuth
+
+  // 1. Sử dụng useMutation để gọi API
+  const mutation = useMutation({
+    mutationFn: (loginData: unknown) => {
+      // Gọi đến API Gateway: POST /auth/login
+      return apiClient.post("/auth/login", loginData);
+    },
+    onSuccess: (response) => {
+      // 2. Khi thành công
+      const { token, user } = response.data;
+      
+      // 3. Lưu token và user vào store (localStorage)
+      setAuth(token, user); 
+      
+      toast.success("Login successful! Redirecting...");
+      
+      // 4. Chuyển hướng về trang chủ
+      router.push("/"); 
+    },
+    onError: (error: { response?: { data?: { message?: string } } }) => {
+      // 5. Khi thất bại
+      toast.error(error.response?.data?.message || "Login failed. Please try again.");
+    },
+  });
 
   const handleLogin = () => {
-    // TODO: Gọi API Gateway /auth/login
-    console.log("Login data:", { email, password });
+    if (!email || !password) {
+      toast.error("Please enter both email and password.");
+      return;
+    }
+    // Chạy mutation
+    mutation.mutate({ email, password });
   };
 
   return (
@@ -30,6 +65,7 @@ export default function LogInPage() {
             placeholder="Email or Phone Number"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={mutation.isPending} // Vô hiệu hóa khi đang gọi API
             className="border-0 border-b rounded-none px-0 shadow-none focus-visible:ring-0"
           />
           <Input
@@ -37,6 +73,7 @@ export default function LogInPage() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={mutation.isPending}
             className="border-0 border-b rounded-none px-0 shadow-none focus-visible:ring-0"
           />
         </div>
@@ -46,19 +83,25 @@ export default function LogInPage() {
             type="submit"
             variant="destructive"
             className="flex-grow py-6 text-md"
+            disabled={mutation.isPending} // Hiển thị trạng thái loading
           >
-            Log In
+            {mutation.isPending ? "Logging in..." : "Log In"}
           </Button>
           
-          {/* Code để navigate (chuyển trang) */}
           <Link
-            href="/forgot-password" // <-- Tạo trang này nếu cần
+            href="/forgot-password"
             className="text-destructive text-sm hover:underline"
           >
             Forgot Password?
           </Link>
         </div>
       </form>
+      <p className="text-center text-sm text-muted-foreground">
+        Don&apos;t have an account?{" "}
+        <Link href="/signup" className="font-medium text-primary underline">
+          Sign Up
+        </Link>
+      </p>
     </div>
   );
 }
