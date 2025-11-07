@@ -5,8 +5,12 @@ import { Input } from "@/src/components/ui/input";
 import { Separator } from "@/src/components/ui/separator";
 import Link from "next/link";
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import apiClient from "@/src/lib/api-client";
 
-// Icon Google SVG đơn giản
+// Icon Google (Giữ nguyên)
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg 
@@ -28,15 +32,24 @@ export default function SignUpPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
+
+  const mutation = useMutation({
+    mutationFn: (signUpData:  unknown) => {
+      // @better-auth dùng 'name', 'email', 'password'
+      return apiClient.post("/auth/register", signUpData);
+    },
+    onSuccess: () => {
+      toast.success("Account created successfully! Please log in.");
+      router.push("/login"); // Chuyển về trang login
+    },
+    onError: (error:  { response?: { data?: { message?: string } } }) => {
+      toast.error(error.response?.data?.message || "Sign up failed.");
+    },
+  });
 
   const handleSignUp = () => {
-    // TODO: Gọi API Gateway /auth/register
-    console.log("Sign Up data:", { name, email, password });
-  };
-
-  const handleGoogleSignUp = () => {
-    // TODO: Logic đăng ký bằng Google (thường dùng Next-Auth)
-    console.log("Signing up with Google");
+    mutation.mutate({ name, email, password });
   };
 
   return (
@@ -55,6 +68,7 @@ export default function SignUpPage() {
             placeholder="Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            disabled={mutation.isPending}
             className="border-0 border-b rounded-none px-0 shadow-none focus-visible:ring-0"
           />
           <Input
@@ -62,6 +76,7 @@ export default function SignUpPage() {
             placeholder="Email or Phone Number"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={mutation.isPending}
             className="border-0 border-b rounded-none px-0 shadow-none focus-visible:ring-0"
           />
           <Input
@@ -69,6 +84,7 @@ export default function SignUpPage() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={mutation.isPending}
             className="border-0 border-b rounded-none px-0 shadow-none focus-visible:ring-0"
           />
         </div>
@@ -78,14 +94,14 @@ export default function SignUpPage() {
             type="submit"
             variant="destructive"
             className="w-full py-6 text-md"
+            disabled={mutation.isPending}
           >
-            Create Account
+            {mutation.isPending ? "Creating Account..." : "Create Account"}
           </Button>
           <Button
             type="button"
             variant="outline"
             className="w-full py-6 text-md"
-            onClick={handleGoogleSignUp}
           >
             <GoogleIcon className="mr-2" />
             Sign up with Google
@@ -95,11 +111,10 @@ export default function SignUpPage() {
 
       <Separator />
 
-      {/* Code để navigate (chuyển trang) */}
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link
-          href="/login" // <-- Điều hướng về trang Log In
+          href="/login"
           className="font-medium text-primary underline"
         >
           Log in

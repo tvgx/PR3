@@ -1,10 +1,11 @@
-// src/store/auth.store.ts
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-// Định nghĩa kiểu dữ liệu cho user (dựa trên token payload)
+// Định nghĩa kiểu User (dựa trên @better-auth và hook của chúng ta)
 type User = {
-  sub: string; // User ID
+  id: string;
+  name: string;
+  email: string;
   role: string;
 };
 

@@ -3,16 +3,8 @@ import { Badge } from "@/src/components/ui/badge";
 import { Star, Heart, Eye } from "lucide-react";
 
 // Định nghĩa kiểu dữ liệu cho sản phẩm
-type Product = {
-  id: string;
-  name: string;
-  price: number;
-  oldPrice?: number;
-  rating: number;
-  reviewCount: number;
-  imageUrl: string;
-  discount?: string;
-};
+import { Product } from "@/src/types";
+import { AddToCartButton } from "@/src/app/(store)/components/AddToCartButton";
 
 // Props của component
 interface ProductCardProps {
@@ -45,11 +37,14 @@ export function ProductCard({ product }: ProductCardProps) {
             <Eye size={16} />
           </button>
         </div>
-        
-        {/* Nút "Add to Cart" ẩn */}
-        <button className="absolute bottom-0 left-0 w-full bg-black text-white py-2 text-sm font-medium translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+        <AddToCartButton
+          product={product}
+          quantity={1}
+          className="absolute bottom-0 left-0 w-full rounded-none text-sm font-medium translate-y-full group-hover:translate-y-0 transition-transform duration-300"
+        >
           Add To Cart
-        </button>
+        </AddToCartButton>
+        
       </div>
 
       {/* Phần nội dung */}

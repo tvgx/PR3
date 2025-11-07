@@ -1,4 +1,4 @@
-"use client"; 
+"use client"; // <-- Biến thành Client Component
 
 import Link from "next/link";
 import {
@@ -21,15 +21,35 @@ import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import { Search, Heart, ShoppingCart, Menu, User, LogOut, Package } from "lucide-react";
 
-// GIẢ ĐỊNH: Bạn có một hook hoặc context để biết user đã đăng nhập hay chưa
-// const { isLoggedIn, user } = useAuth(); 
-// Tạm thời, chúng ta sẽ giả định isLoggedIn = true
-const isLoggedIn = true; 
+// Import auth store và router
+import { useAuthStore } from "@/src/store/auth.store";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Header() {
+  const router = useRouter();
+  
+  // 1. Đọc trạng thái từ Zustand store
+  const { user, token, clearAuth } = useAuthStore((state) => ({
+    user: state.user,
+    token: state.token,
+    clearAuth: state.clearAuth,
+  }));
+  
+  // Biến isLoggedIn được tính toán động
+  const isLoggedIn = !!token; 
+
+  // 2. Hàm Đăng Xuất
+  const handleLogout = () => {
+    clearAuth(); // Xóa token khỏi store
+    toast.success("Logged out successfully.");
+    router.push("/"); // Về trang chủ
+    router.refresh(); // Tải lại để đảm bảo trạng thái được cập nhật
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      {/* Top Bar (Thông báo) */}
+      {/* Top Bar (Giữ nguyên) */}
       <div className="bg-black text-white text-sm text-center py-2 px-4">
         <p>
           Summer Sale For All Swim Suits And Free Express Delivery - OFF 50%! 
@@ -44,7 +64,7 @@ export default function Header() {
           Exclusive
         </Link>
 
-        {/* Navigation (Desktop) - ĐÃ CẬP NHẬT */}
+        {/* Navigation (Desktop) - Cập nhật link Sign Up */}
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
             <NavigationMenuItem>
@@ -68,17 +88,20 @@ export default function Header() {
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
-            <NavigationMenuItem>
-              <Link href="/signup" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Sign Up
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
+            {/* 3. Ẩn "Sign Up" nếu đã đăng nhập */}
+            {!isLoggedIn && (
+              <NavigationMenuItem>
+                <Link href="/signup" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Sign Up
+                                    </NavigationMenuLink>
+                  </Link>
+              </NavigationMenuItem>
+            )}
           </NavigationMenuList>
         </NavigationMenu>
 
-        {/* Search và Icons (Desktop) - ĐÃ CẬP NHẬT */}
+        {/* Search và Icons (Desktop) */}
         <div className="hidden md:flex items-center gap-4">
           <div className="relative">
             <Input
@@ -97,7 +120,7 @@ export default function Header() {
             </Link>
           </Button>
 
-           {/* --- LOGIC DROPDOWN TÀI KHOẢN --- */}
+           {/* 4. LOGIC DROPDOWN TÀI KHOẢN (Đã Cập Nhật) */}
            {isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -106,7 +129,8 @@ export default function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Hi, Md Rimel</DropdownMenuLabel>
+                {/* Hiển thị tên user thật */}
+                <DropdownMenuLabel>Hi, {user?.name || 'User'}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/account">
@@ -115,19 +139,21 @@ export default function Header() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/account/orders"> {/* Cần tạo trang này */}
+                  <Link href="/account/orders">
                     <Package className="mr-2 h-4 w-4" />
                     <span>My Order</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                {/* Nút Đăng Xuất */}
+                <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Logout</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
            ) : (
+            // Nếu chưa đăng nhập, nút User sẽ link đến /login
             <Button asChild variant="ghost" size="icon">
               <Link href="/login">
                 <User size={20} />

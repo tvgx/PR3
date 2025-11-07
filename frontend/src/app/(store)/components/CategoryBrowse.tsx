@@ -1,16 +1,30 @@
+// src/app/(store)/_components/CategoryBrowse.tsx
+
 import { Card, CardContent } from "@/src/components/ui/card";
-import { Smartphone, Watch, Camera, Gamepad, Computer, Headset } from "lucide-react";
+import { Smartphone, Watch, Camera, Gamepad, Computer, Headset, Shirt } from "lucide-react";
+import Link from "next/link"; // Thêm Link
 
-const categories = [
-  { name: "Phones", icon: Smartphone },
-  { name: "Computers", icon: Computer },
-  { name: "SmartWatch", icon: Watch },
-  { name: "Camera", icon: Camera },
-  { name: "HeadPhones", icon: Headset },
-  { name: "Gaming", icon: Gamepad },
-];
+// 1. Tạo một đối tượng (map) để liên kết tên category với icon
+// (Bạn có thể mở rộng map này)
+const iconMap: { [key: string]: React.ElementType } = {
+  "Phones": Smartphone,
+  "Computers": Computer,
+  "SmartWatch": Watch,
+  "Camera": Camera,
+  "HeadPhones": Headset,
+  "Gaming": Gamepad,
+  "Apparel": Shirt, // Ví dụ cho shop quần áo
+  "Men's Fashion": Shirt,
+};
 
-export function CategoryBrowse() {
+// 2. Nhận 'categories' từ props
+export function CategoryBrowse({ categories }: { categories: string[] }) {
+  
+  // 3. Nếu không có icon, dùng icon mặc định
+  const getIcon = (name: string) => {
+    return iconMap[name] || Shirt; // Dùng 'Shirt' làm mặc định
+  };
+
   return (
     <section>
       <div className="mb-6">
@@ -19,14 +33,20 @@ export function CategoryBrowse() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {categories.map((category) => (
-          <Card key={category.name} className="flex flex-col items-center justify-center p-8 aspect-square hover:bg-destructive hover:text-white transition-colors cursor-pointer">
-            <CardContent className="p-0 flex flex-col items-center gap-4">
-              <category.icon size={48} strokeWidth={1.5} />
-              <span className="font-medium">{category.name}</span>
-            </CardContent>
-          </Card>
-        ))}
+        {/* 4. Map qua dữ liệu thật */}
+        {categories.map((name) => {
+          const Icon = getIcon(name); // Lấy icon từ map
+          return (
+            <Link href={`/products?category=${name}`} key={name}>
+              <Card className="flex flex-col items-center justify-center p-8 aspect-square hover:bg-destructive hover:text-white transition-colors cursor-pointer">
+                <CardContent className="p-0 flex flex-col items-center gap-4">
+                  <Icon size={48} strokeWidth={1.5} />
+                  <span className="font-medium">{name}</span>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
