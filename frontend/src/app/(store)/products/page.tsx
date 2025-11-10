@@ -24,16 +24,8 @@ import {
 } from "@/src/components/ui/pagination";
 import { ProductCard } from "@/src/components/features/ProductCard";
 import { Separator } from "@/src/components/ui/separator";
+import { Product } from "@/src/types";
 
-// Dữ liệu giả (Sau này sẽ lấy từ API)
-const mockProducts = [
-  { id: "1", name: "Gucci duffle bag", price: 960, oldPrice: 1160, rating: 4.5, reviewCount: 65, imageUrl: "/placeholder.svg" },
-  { id: "2", name: "RGB liquid CPU Cooler", price: 160, oldPrice: 170, rating: 4.5, reviewCount: 65, imageUrl: "/placeholder.svg" },
-  { id: "3", name: "Small BookSelf", price: 360, rating: 5, reviewCount: 65, imageUrl: "/placeholder.svg" },
-  { id: "4", name: "The north coat", price: 260, oldPrice: 360, rating: 5, reviewCount: 65, imageUrl: "/placeholder.svg" },
-  { id: "5", name: "HAVIT HV-G92 Gamepad", price: 120, oldPrice: 160, rating: 4.5, reviewCount: 88, imageUrl: "/placeholder.svg" },
-  { id: "6", name: "AK-900 Wired Keyboard", price: 960, oldPrice: 1160, rating: 4, reviewCount: 75, imageUrl: "/placeholder.svg" },
-];
 
 export default function ProductsPage() {
   return (
@@ -108,12 +100,12 @@ export default function ProductsPage() {
           </div>
 
           {/* Lưới Sản Phẩm */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
-            {mockProducts.map((product) => (
+          {/* <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
+            {products.map((product) => (
               // Tái sử dụng ProductCard
               <ProductCard key={product.id} product={product} />
             ))}
-          </div>
+          </div> */}
 
           {/* Phân trang */}
           <Pagination className="mt-12">
