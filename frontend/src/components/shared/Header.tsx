@@ -25,6 +25,8 @@ import { Search, Heart, ShoppingCart, Menu, User, LogOut, Package } from "lucide
 import { useAuthStore } from "@/src/store/auth.store";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useState, useEffect } from "react"; 
+import { Skeleton } from "@/src/components/ui/skeleton"; // Thêm Skeleton
 
 export default function Header() {
   const router = useRouter();
@@ -35,6 +37,8 @@ export default function Header() {
     token: state.token,
     clearAuth: state.clearAuth,
   }));
+
+  const [isMounted, setIsMounted] = useState(false);
   
   // Biến isLoggedIn được tính toán động
   const isLoggedIn = !!token; 
@@ -121,7 +125,10 @@ export default function Header() {
           </Button>
 
            {/* 4. LOGIC DROPDOWN TÀI KHOẢN (Đã Cập Nhật) */}
-           {isLoggedIn ? (
+           {!isMounted ? (
+            // Hiển thị Skeleton (khung xương) khi chưa mount (trên server)
+            <Skeleton className="h-9 w-9 rounded-full" />
+           ) : isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">

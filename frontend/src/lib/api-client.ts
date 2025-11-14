@@ -1,7 +1,7 @@
 // src/lib/api-client.ts
 
 import { useAuthStore } from "@/src/store/auth.store";
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 
 // 1. Tạo một instance axios đã được cấu hình
 const apiClient = axios.create({
@@ -11,15 +11,8 @@ const apiClient = axios.create({
     "Content-Type": "application/json",
   },
 });
-
-// 3. (Quan trọng) Sử dụng Interceptor để Tự Động Gắn Token
-// Đoạn code này sẽ chạy "trước" MỌI request mà frontend gửi đi
 apiClient.interceptors.request.use((config) => {
-  // Lấy trạng thái từ Zustand store (store này đã persist trong localStorage)
-  // Chúng ta dùng .getState() vì chúng ta đang ở ngoài một React component
   const { token } = useAuthStore.getState();
-
-  // Nếu có token, gắn nó vào header Authorization
   if (token) {
     config.headers["Authorization"] = `Bearer ${token}`;
   }
@@ -29,3 +22,4 @@ apiClient.interceptors.request.use((config) => {
 });
 
 export default apiClient;
+export { isAxiosError };

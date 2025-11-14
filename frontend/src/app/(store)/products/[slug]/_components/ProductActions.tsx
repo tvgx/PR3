@@ -13,32 +13,22 @@ import { useState } from "react";
 
 export function ProductActions({ product }: { product: Product }) {
   const [quantity, setQuantity] = useState(1);
-  const addItem = useCartStore((state) => state.addItem);
+  const { addItem, isLoading } = useCartStore((state) => ({
+    addItem: state.addItem,
+    isLoading: state.isLoading,
+  }));
 
-  const handleAddToCart = () => {
-    addItem(product, quantity);
+  const handleAddToCart = async () => {
+    await addItem(product, quantity);
   };
 
   return (
     <div className="flex flex-col gap-4">
+      {/* ... (Tên, Giá, Mô tả, Size, Color...) */}
       <h1 className="text-4xl font-semibold">{product.name}</h1>
-      {/* ... (Rating, In Stock) ... */}
       <p className="text-3xl">${product.price}</p>
       <p className="text-sm leading-relaxed">{product.description}</p>
-      
       <Separator />
-      
-      {/* Tùy chọn Màu Sắc */}
-      <div className="flex items-center gap-4">
-        <Label className="text-lg">Colours:</Label>
-        {/* ... (RadioGroup) ... */}
-      </div>
-
-      {/* Tùy chọn Kích Cỡ */}
-       <div className="flex items-center gap-4">
-        <Label className="text-lg">Size:</Label>
-        {/* ... (RadioGroup) ... */}
-      </div>
 
       {/* Mua hàng (Số lượng + Nút) */}
       <div className="flex items-center gap-4 mt-4">
@@ -47,14 +37,16 @@ export function ProductActions({ product }: { product: Product }) {
           value={quantity}
           onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
           className="w-20 text-center"
+          disabled={isLoading} // Vô hiệu hóa input
         />
         <Button
           variant="destructive"
           size="lg"
           className="flex-grow"
           onClick={handleAddToCart}
+          disabled={isLoading} // Vô hiệu hóa nút
         >
-          Add To Cart
+          {isLoading ? "Adding..." : "Add To Cart"}
         </Button>
         <Button variant="outline" size="icon" className="h-12 w-12">
           <Heart />
