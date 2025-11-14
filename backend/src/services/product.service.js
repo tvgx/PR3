@@ -14,10 +14,9 @@ const queryProducts = async (filters, options) => {
   if (filters.tag) {
     query.tags = { $in: [filters.tag] };
   }
-  // (Bạn có thể thêm logic lọc giá ở đây)
-
-  const limit = options.limit || 10;
-  const page = options.page || 1;
+  // TODO: Thêm logic lọc theo giá
+  const limit = parseInt(options.limit, 10) || 40;
+  const page = parseInt(options.page, 10) || 1;
   const skip = (page - 1) * limit;
 
   const sort = {};
@@ -34,13 +33,10 @@ const queryProducts = async (filters, options) => {
     .limit(limit);
     
   const totalResults = await Product.countDocuments(query);
+  const totalPages = Math.ceil(totalResults / limit);
 
-  return { products, totalResults, totalPages: Math.ceil(totalResults / limit) };
+  return { products, totalResults, totalPages, currentPage: page };
 };
-
-/**
- * Lấy chi tiết sản phẩm bằng ID
- */
 const getProductById = async (id) => {
   return Product.findById(id);
 };
