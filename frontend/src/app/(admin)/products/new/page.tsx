@@ -1,47 +1,118 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
-import { Textarea } from "@/src/components/ui/textarea"; // Cần cài: npx shadcn-ui@latest add textarea
+import { Textarea } from "@/src/components/ui/textarea";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useMutation } from "@tanstack/react-query";
-import apiClient from "@/src/lib/api-client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import apiClient, { isAxiosError } from "@/src/lib/api-client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function NewProductPage() {
   const router = useRouter();
+  const queryClient = useQueryClient(); // Dùng để làm mới (invalidate)
+  
+  // State cho các trường
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState(0);
   const [stock, setStock] = useState(0);
   const [category, setCategory] = useState("");
-  const [imageUrl, setImageUrl] = useState(""); // Tạm thời dùng URL, chưa dùng Upload
+  
+  // State cho file ảnh
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
-  // Mutation để gọi API: POST /api/products
-  const mutation = useMutation({
+  // Mutation để Upload file (API: POST /api/upload)
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file); // Tên 'file' phải khớp với backend 'upload.single('file')'
+      
+      const { data } = await apiClient.post("/upload", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return data; // Trả về { url: '...' }
+    },
+    onError: (error: unknown) => {
+      let message = "Image upload failed.";
+      if (isAxiosError(error)) {
+        message = error.response?.data?.message || message;
+      }
+      toast.error(message);
+    }
+  });
+  
+  // Mutation để Tạo sản phẩm (API: POST /api/products)
+  const createProductMutation = useMutation({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mutationFn: (newProduct: any) => {
       return apiClient.post("/products", newProduct);
     },
     onSuccess: () => {
       toast.success("Product created successfully!");
-      router.push("/admin/products"); // Quay về trang danh sách
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] }); // Làm mới danh sách
+      router.push("/admin/products");
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to create product.");
+    onError: (error: unknown) => {
+      let message = "Failed to create product.";
+      if (isAxiosError(error)) {
+        message = error.response?.data?.message || message;
+      }
+      toast.error(message);
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newProduct = { name, description, price, stock, category, imageUrl };
-    mutation.mutate(newProduct);
+    
+    // 1. Kiểm tra xem đã chọn file chưa
+    if (!imageFile) {
+      toast.error("Please select an image to upload.");
+      return;
+    }
+
+    try {
+      // 2. Bước A: Upload ảnh trước
+      // Dùng mutateAsync để đợi kết quả upload
+      const uploadData = await uploadMutation.mutateAsync(imageFile);
+      const imageUrl = uploadData.url; // Lấy URL từ API upload
+
+      if (!imageUrl) {
+        toast.error("Failed to get image URL after upload.");
+        return;
+      }
+
+      // 3. Bước B: Tạo sản phẩm với URL vừa nhận được
+      const newProduct = { 
+        name, 
+        description, 
+        price, 
+        stock, 
+        category, 
+        imageUrl // Dùng URL thật
+      };
+      await createProductMutation.mutateAsync(newProduct);
+      
+    } catch (error) {
+      // Lỗi đã được xử lý trong 'onError' của từng mutation
+      console.error("Failed to create product:", error);
+    }
   };
+
+  // Trạng thái loading (khi 1 trong 2 mutation đang chạy)
+  const isCreating = uploadMutation.isPending || createProductMutation.isPending;
 
   return (
     <div className="flex flex-col gap-8">
@@ -65,7 +136,12 @@ export default function NewProductPage() {
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="name">Product Name</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                <Input 
+                  id="name" 
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)} 
+                  disabled={isCreating}
+                />
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="description">Description</Label>
@@ -73,6 +149,8 @@ export default function NewProductPage() {
                   id="description" 
                   value={description} 
                   onChange={(e) => setDescription(e.target.value)} 
+                  disabled={isCreating}
+                  rows={5}
                 />
               </div>
             </div>
@@ -86,7 +164,8 @@ export default function NewProductPage() {
                     id="price" 
                     type="number"
                     value={price} 
-                    onChange={(e) => setPrice(parseFloat(e.target.value))} 
+                    onChange={(e) => setPrice(parseFloat(e.target.value) || 0)} 
+                    disabled={isCreating}
                   />
                 </div>
                 <div className="flex flex-col gap-2">
@@ -95,19 +174,36 @@ export default function NewProductPage() {
                     id="stock" 
                     type="number"
                     value={stock} 
-                    onChange={(e) => setStock(parseInt(e.target.value))} 
+                    onChange={(e) => setStock(parseInt(e.target.value) || 0)} 
+                    disabled={isCreating}
                   />
                 </div>
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="category">Category</Label>
-                <Input id="category" value={category} onChange={(e) => setCategory(e.target.value)} />
+                <Input 
+                  id="category" 
+                  value={category} 
+                  onChange={(e) => setCategory(e.target.value)} 
+                  disabled={isCreating}
+                />
               </div>
+              
+              {/* THAY THẾ IMAGE URL BẰNG FILE UPLOAD */}
               <div className="flex flex-col gap-2">
-                <Label htmlFor="imageUrl">Image URL</Label>
-                <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+                <Label htmlFor="imageFile">Product Image</Label>
+                <Input 
+                  id="imageFile" 
+                  type="file"
+                  accept="image/*" // Chỉ chấp nhận ảnh
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      setImageFile(e.target.files[0]);
+                    }
+                  }}
+                  disabled={isCreating}
+                />
               </div>
-              {/* (Sau này sẽ thay bằng File Upload) */}
             </div>
 
             {/* Nút Submit */}
@@ -118,9 +214,9 @@ export default function NewProductPage() {
               <Button 
                 type="submit" 
                 variant="destructive"
-                disabled={mutation.isPending}
+                disabled={isCreating}
               >
-                {mutation.isPending ? "Creating..." : "Create Product"}
+                {isCreating ? "Creating..." : "Create Product"}
               </Button>
             </div>
           </form>
