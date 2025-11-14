@@ -1,9 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import Link from "next/link";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -13,8 +9,8 @@ import { useAuthStore } from "@/src/store/auth.store";
 import Cookies from "js-cookie"; // <-- Import js-cookie
 
 export default function LogInPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email] = useState("");
+  const [password] = useState("");
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
 
