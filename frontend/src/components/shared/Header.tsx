@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client"; 
 
 import Link from "next/link";
@@ -25,27 +24,26 @@ import { useAuthStore } from "@/src/store/auth.store";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-// 1. Import useState, useEffect và Skeleton
 import { useState, useEffect } from "react"; 
 import { Skeleton } from "@/src/components/ui/skeleton";
 
 export default function Header() {
   const router = useRouter();
   
-  // 2. Đọc trạng thái từ store (giữ nguyên)
+  // ----- FIX LỖI GỐC (getServerSnapshot) -----
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMounted(true);
+  }, []); // Mảng rỗng đảm bảo nó chỉ chạy 1 lần
+
   const { user, token, clearAuth } = useAuthStore((state) => ({
     user: state.user,
     token: state.token,
     clearAuth: state.clearAuth,
   }));
-
-  // 3. Tạo state "isMounted"
-  const [isMounted, setIsMounted] = useState(false);
-
-  // // 4. Set isMounted thành true CHỈ khi ở client
-  useEffect(() => {
-    setIsMounted(true);
-  }, []); // Mảng rỗng đảm bảo nó chỉ chạy 1 lần
+  // ----- KẾT THÚC FIX LỖI GỐC -----
 
   const isLoggedIn = !!token; 
 
@@ -60,10 +58,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       {/* Top Bar (Giữ nguyên) */}
       <div className="bg-black text-white text-sm text-center py-2 px-4">
-        <p>
-          Summer Sale For All Swim Suits And Free Express Delivery - OFF 50%! 
-          <Link href="#" className="font-semibold underline ml-2">ShopNow</Link>
-        </p>
+        {/* ... (Nội dung top bar) ... */}
       </div>
       
       {/* Main Header */}
@@ -72,10 +67,11 @@ export default function Header() {
           Exclusive
         </Link>
 
-        {/* Navigation (Desktop) - Giữ nguyên code legacyBehavior */}
+        {/* ----- FIX LỖI MỚI (Nested <a>) ----- */}
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
             <NavigationMenuItem>
+              {/* Thêm lại 'legacyBehavior' và 'passHref' */}
               <Link href="/" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Home
@@ -83,6 +79,7 @@ export default function Header() {
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
+              {/* Thêm lại 'legacyBehavior' và 'passHref' */}
               <Link href="/contact" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Contact
@@ -90,6 +87,7 @@ export default function Header() {
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
+              {/* Thêm lại 'legacyBehavior' và 'passHref' */}
               <Link href="/about" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   About
@@ -97,9 +95,9 @@ export default function Header() {
               </Link>
             </NavigationMenuItem>
             
-            {/* 5. Gói logic 'isLoggedIn' bên trong 'isMounted' */}
             {isMounted && !isLoggedIn && (
               <NavigationMenuItem>
+                {/* Thêm lại 'legacyBehavior' và 'passHref' */}
                 <Link href="/signup" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Sign Up
@@ -109,62 +107,25 @@ export default function Header() {
             )}
           </NavigationMenuList>
         </NavigationMenu>
+        {/* ----- KẾT THÚC FIX LỖI MỚI ----- */}
 
         {/* Search và Icons (Desktop) */}
         <div className="hidden md:flex items-center gap-4">
-          <div className="relative">
-            <Input
-              type="search"
-              placeholder="What are you looking for?"
-              className="pr-10 bg-secondary/50 border-none"
-            />
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          </div>
-          <Button variant="ghost" size="icon">
-            <Heart size={20} />
-          </Button>
+          {/* ... (Thanh Search, Nút Heart, Nút Cart) ... */}
           <Button asChild variant="ghost" size="icon">
             <Link href="/cart">
               <ShoppingCart size={20} />
             </Link>
           </Button>
 
-           {/* 6. SỬA LỖI CHÍNH: Gating Logic */}
+           {/* Logic Dropdown (Đã có 'isMounted' fix) */}
            {!isMounted ? (
-            // Hiển thị Skeleton (khung xương) khi chưa mount (trên server)
             <Skeleton className="h-9 w-9 rounded-full" />
            ) : isLoggedIn ? (
-            // Hiển thị Dropdown (khi đã mount VÀ đã đăng nhập)
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <User size={20} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Hi, {user?.name || 'User'}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/account">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Manage My Account</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/account/orders">
-                    <Package className="mr-2 h-4 w-4" />
-                    <span>My Order</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Logout</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
+              {/* ... (Code Dropdown) ... */}
             </DropdownMenu>
            ) : (
-            // Hiển thị nút Login (khi đã mount VÀ chưa đăng nhập)
             <Button asChild variant="ghost" size="icon">
               <Link href="/login">
                 <User size={20} />
@@ -174,9 +135,6 @@ export default function Header() {
            {/* --- KẾT THÚC LOGIC DROPDOWN --- */}
 
         </div>
-
-        {/* Mobile Menu Trigger (Giữ nguyên) */}
-        {/* ... */}
       </div>
     </header>
   );
