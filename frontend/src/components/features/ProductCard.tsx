@@ -5,6 +5,8 @@ import { Star, Heart, Eye } from "lucide-react";
 // Định nghĩa kiểu dữ liệu cho sản phẩm
 import { Product } from "@/src/types";
 import { AddToCartButton } from "@/src/app/(store)/components/AddToCartButton";
+import { WishlistButton } from "./WishlistButton";
+import { Button } from "@/src/components/ui/button"
 
 // Props của component
 interface ProductCardProps {
@@ -37,6 +39,15 @@ export function ProductCard({ product }: ProductCardProps) {
             <Eye size={16} />
           </button>
         </div>
+
+        <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <WishlistButton product={product} />
+          
+          <Button variant="secondary" size="icon" className="p-2 bg-white rounded-full shadow-md hover:bg-secondary">
+            <Eye size={16} />
+          </Button>
+        </div>
+
         <AddToCartButton
           product={product}
           quantity={1}

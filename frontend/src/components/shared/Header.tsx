@@ -30,7 +30,7 @@ import { Skeleton } from "@/src/components/ui/skeleton";
 export default function Header() {
   const router = useRouter();
   
-  // ----- FIX LỖI GỐC (getServerSnapshot) -----
+  // ----- FIX LỖI HYDRATION (getServerSnapshot) -----
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -38,12 +38,12 @@ export default function Header() {
     setIsMounted(true);
   }, []); // Mảng rỗng đảm bảo nó chỉ chạy 1 lần
 
-  const { user, token, clearAuth } = useAuthStore((state) => ({
-    user: state.user,
-    token: state.token,
-    clearAuth: state.clearAuth,
-  }));
-  // ----- KẾT THÚC FIX LỖI GỐC -----
+  // ----- FIX LỖI VÒNG LẶP VÔ HẠN (Maximum update depth) -----
+  // Lấy từng giá trị ra riêng biệt
+  const user = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.token);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  // ----- KẾT THÚC FIX VÒNG LẶP -----
 
   const isLoggedIn = !!token; 
 
@@ -58,7 +58,10 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       {/* Top Bar (Giữ nguyên) */}
       <div className="bg-black text-white text-sm text-center py-2 px-4">
-        {/* ... (Nội dung top bar) ... */}
+        <p>
+          Summer Sale For All Swim Suits And Free Express Delivery - OFF 50%! 
+          <Link href="#" className="font-semibold underline ml-2">ShopNow</Link>
+        </p>
       </div>
       
       {/* Main Header */}
@@ -67,19 +70,18 @@ export default function Header() {
           Exclusive
         </Link>
 
-        {/* ----- FIX LỖI MỚI (Nested <a>) ----- */}
+        {/* ----- FIX LỖI LỒNG NHAU <a> VÀ LỖI CÚ PHÁP ----- */}
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
             <NavigationMenuItem>
-              {/* Thêm lại 'legacyBehavior' và 'passHref' */}
+              {/* ĐÃ SỬA LỖI: Xóa </Link> thừa */}
               <Link href="/" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Home
                 </NavigationMenuLink>
-              </Link>
+              </Link> 
             </NavigationMenuItem>
             <NavigationMenuItem>
-              {/* Thêm lại 'legacyBehavior' và 'passHref' */}
               <Link href="/contact" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Contact
@@ -87,7 +89,6 @@ export default function Header() {
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              {/* Thêm lại 'legacyBehavior' và 'passHref' */}
               <Link href="/about" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   About
@@ -97,7 +98,6 @@ export default function Header() {
             
             {isMounted && !isLoggedIn && (
               <NavigationMenuItem>
-                {/* Thêm lại 'legacyBehavior' và 'passHref' */}
                 <Link href="/signup" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Sign Up
@@ -107,11 +107,21 @@ export default function Header() {
             )}
           </NavigationMenuList>
         </NavigationMenu>
-        {/* ----- KẾT THÚC FIX LỖI MỚI ----- */}
+        {/* ----- KẾT THÚC FIX LỖI ----- */}
 
         {/* Search và Icons (Desktop) */}
         <div className="hidden md:flex items-center gap-4">
-          {/* ... (Thanh Search, Nút Heart, Nút Cart) ... */}
+          <div className="relative">
+            <Input
+              type="search"
+              placeholder="What are you looking for?"
+              className="pr-10 bg-secondary/50 border-none"
+            />
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          </div>
+          <Button variant="ghost" size="icon">
+            <Heart size={20} />
+          </Button>
           <Button asChild variant="ghost" size="icon">
             <Link href="/cart">
               <ShoppingCart size={20} />
@@ -123,7 +133,32 @@ export default function Header() {
             <Skeleton className="h-9 w-9 rounded-full" />
            ) : isLoggedIn ? (
             <DropdownMenu>
-              {/* ... (Code Dropdown) ... */}
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <User size={20} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Hi, {user?.name || 'User'}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/account">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Manage My Account</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/account/orders">
+                    <Package className="mr-2 h-4 w-4" />
+                    <span>My Order</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
             </DropdownMenu>
            ) : (
             <Button asChild variant="ghost" size="icon">
@@ -135,6 +170,9 @@ export default function Header() {
            {/* --- KẾT THÚC LOGIC DROPDOWN --- */}
 
         </div>
+
+        {/* Mobile Menu Trigger (Giữ nguyên) */}
+        {/* ... */}
       </div>
     </header>
   );
