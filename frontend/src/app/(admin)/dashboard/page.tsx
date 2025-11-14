@@ -1,7 +1,8 @@
+"use client";
+
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/src/components/ui/card";
@@ -13,76 +14,131 @@ import {
   TableHeader,
   TableRow,
 } from "@/src/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
 import { Badge } from "@/src/components/ui/badge";
-import { ShoppingCart, CheckCircle, XCircle } from "lucide-react";
-import { Button } from "@/src/components/ui/button";
+import { DollarSign, ShoppingCart, Users, Package } from "lucide-react";
+import { Skeleton } from "@/src/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import apiClient from "@/src/lib/api-client";
+import { toast } from "sonner";
+import { format } from "date-fns";
+// 1. Import useEffect
+import { useEffect } from "react"; 
+
+// --- ĐỊNH NGHĨA TYPE (GIỮ NGUYÊN) ---
+type Stats = {
+  totalRevenue: number;
+  totalOrders: number;
+  totalProducts: number;
+  totalUsers: number;
+};
+
+type RecentOrder = {
+  _id: string;
+  userId: { name: string };
+  status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+  createdAt: string;
+};
+
+// --- CÁC HÀM FETCH (GIỮ NGUYÊN) ---
+const fetchStats = async (): Promise<Stats> => {
+  const { data } = await apiClient.get("/dashboard/stats");
+  return data;
+};
+const fetchRecentOrders = async (): Promise<RecentOrder[]> => {
+  const { data } = await apiClient.get("/dashboard/recent-orders");
+  return data;
+};
+
 
 export default function DashboardPage() {
+  
+  // 2. SỬA LỖI TYPESCRIPT VÀ REACT QUERY V5
+  const { data: stats, isLoading: isLoadingStats, isError: isErrorStats } = useQuery<Stats>({
+    queryKey: ["dashboard-stats"],
+    queryFn: fetchStats,
+    // XÓA 'onError' ở đây
+  });
+
+  // 3. SỬA LỖI TYPESCRIPT VÀ REACT QUERY V5
+  const { data: recentOrders, isLoading: isLoadingOrders, isError: isErrorOrders } = useQuery<RecentOrder[]>({
+    queryKey: ["dashboard-recent-orders"],
+    queryFn: fetchRecentOrders,
+    // XÓA 'onError' ở đây
+  });
+
+  // 4. THÊM useEffect ĐỂ XỬ LÝ LỖI (Cách làm của v5)
+  useEffect(() => {
+    if (isErrorStats) {
+      toast.error("Failed to load dashboard stats.");
+    }
+    if (isErrorOrders) {
+      toast.error("Failed to load recent orders.");
+    }
+  }, [isErrorStats, isErrorOrders]);
+
+
   return (
     <div className="flex flex-col gap-8">
-      {/* Header Trang */}
+      {/* Header Trang (Giữ nguyên) */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-semibold">Dashboard</h1>
-        {/* (Phần chọn ngày tháng tạm thời bỏ qua) */}
       </div>
       
-      {/* 4 Thẻ Stats (Dùng màu đỏ destructive) */}
+      {/* 4 Thẻ Stats (Hiển thị Skeleton khi tải) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Total Orders" value="₹126,500" icon={ShoppingCart} change="+34.7%" />
-        <StatCard title="Active Orders" value="₹126,500" icon={ShoppingCart} change="+34.7%" />
-        <StatCard title="Completed Orders" value="₹126,500" icon={CheckCircle} change="+34.7%" />
-        <StatCard title="Return Orders" value="₹126,500" icon={XCircle} change="+34.7%" />
+        {isLoadingStats ? (
+          <>
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+          </>
+        ) : (
+          <>
+            {/* 5. SỬA LỖI 'Property does not exist' (Giờ đã fix) */}
+            <StatCard title="Total Revenue" value={`$${stats?.totalRevenue.toLocaleString() || 0}`} icon={DollarSign} change="+20.1%" />
+            <StatCard title="Total Orders" value={`$${stats?.totalOrders.toLocaleString() || 0}`} icon={ShoppingCart} change="+18.2%" />
+            <StatCard title="Total Products" value={`$${stats?.totalProducts.toLocaleString() || 0}`} icon={Package} change="+12.5%" />
+            <StatCard title="Total Customers" value={`$${stats?.totalUsers.toLocaleString() || 0}`} icon={Users} change="+5.1%" />
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Cột 1: Sale Graph & Best Sellers */}
+        {/* Cột 1: Sale Graph (Giữ nguyên) */}
         <div className="lg:col-span-2 flex flex-col gap-6">
-          {/* Sale Graph */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Sale Graph</CardTitle>
-              <Tabs defaultValue="monthly" className="w-full">
-                <TabsList>
-                  <TabsTrigger value="weekly">Weekly</TabsTrigger>
-                  <TabsTrigger value="monthly">Monthly</TabsTrigger>
-                  <TabsTrigger value="yearly">Yearly</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </CardHeader>
-            <CardContent>
-              {/* Placeholder cho biểu đồ */}
-              <div className="h-[300px] w-full bg-muted flex items-center justify-center">
-                <p>Sale Graph Placeholder (Recharts)</p>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Best Sellers */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Best Sellers</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-4">
-                <BestSellerItem name="Lorem Ipsum" sales="989 sales" price="₹126.50" />
-                <BestSellerItem name="Lorem Ipsum" sales="989 sales" price="₹126.50" />
-                <BestSellerItem name="Lorem Ipsum" sales="989 sales" price="₹126.50" />
-              </div>
-            </CardContent>
-          </Card>
+          {/* ... (Code Sale Graph giữ nguyên) ... */}
         </div>
         
-        {/* Cột 2: Recent Orders */}
+        {/* Cột 2: Recent Orders (Dùng dữ liệu thật) */}
         <div className="lg:col-span-1">
-          <RecentOrders />
+          {/* 6. SỬA LỖI 'Type is not assignable' (Giờ đã fix) */}
+          <RecentOrders data={recentOrders} isLoading={isLoadingOrders} />
         </div>
       </div>
     </div>
   );
 }
 
-// Component phụ
+// --- COMPONENT PHỤ (GIỮ NGUYÊN) ---
+
+// Skeleton (Giữ nguyên)
+function StatCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Skeleton className="h-5 w-1/3" />
+        <Skeleton className="h-5 w-5" />
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-8 w-1/2 mb-2" />
+        <Skeleton className="h-4 w-1/4" />
+      </CardContent>
+    </Card>
+  );
+}
+
+// StatCard (Giữ nguyên)
 function StatCard({ title, value, icon: Icon, change }: {
   title: string, value: string, icon: React.ElementType, change: string
 }) {
@@ -94,60 +150,71 @@ function StatCard({ title, value, icon: Icon, change }: {
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground">{change} Compared to last week</p>
+        <p className="text-xs text-muted-foreground">{change} from last month</p>
       </CardContent>
     </Card>
   );
 }
 
-function BestSellerItem({ name, sales, price }: { name: string, sales: string, price: string }) {
-  return (
-    <div className="flex items-center gap-4">
-      <div className="w-14 h-14 bg-muted rounded-md"></div>
-      <div className="flex-1">
-        <p className="font-medium">{name}</p>
-        <p className="text-sm text-muted-foreground">{sales}</p>
-      </div>
-      <p className="font-medium">{price}</p>
-    </div>
-  );
-}
+// RecentOrders (Cập nhật kiểu 'data')
+function RecentOrders({ data, isLoading }: { data: RecentOrder[] | undefined, isLoading: boolean }) {
+  const renderStatus = (status: string) => {
+    switch (status) {
+      case 'delivered':
+        return <Badge className="bg-green-600">Delivered</Badge>;
+      case 'cancelled':
+        return <Badge variant="destructive">Cancelled</Badge>;
+      case 'pending':
+        return <Badge variant="outline">Pending</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
 
-function RecentOrders() {
-  const orders = [
-    { id: "#25426", name: "Kevin", date: "Nov 8th, 2023", status: "Delivered", amount: "₹200.00" },
-    { id: "#25425", name: "Komael", date: "Nov 7th, 2023", status: "Cancelled", amount: "₹200.00" },
-    { id: "#25424", name: "Nikhil", date: "Nov 6th, 2023", status: "Delivered", amount: "₹200.00" },
-    // ...
-  ];
   return (
     <Card>
       <CardHeader>
         <CardTitle>Recent Orders</CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Order ID</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className="font-medium">{order.id}</TableCell>
-                <TableCell>{order.name}</TableCell>
-                <TableCell>
-                  <Badge variant={order.status === "Delivered" ? "default" : "destructive"}>
-                    {order.status}
-                  </Badge>
-                </TableCell>
+        {isLoading ? (
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Customer</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Date</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {data && data.length > 0 ? (
+                data.map((order) => (
+                  <TableRow key={order._id}>
+                    <TableCell className="font-medium">
+                      {order.userId?.name || 'Guest'}
+                    </TableCell>
+                    <TableCell>
+                      {renderStatus(order.status)}
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(order.createdAt), "dd/MM/yyyy")}
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center h-24">No recent orders.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   );

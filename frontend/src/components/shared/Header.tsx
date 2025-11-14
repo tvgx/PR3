@@ -16,14 +16,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
-import { Search, Heart, ShoppingCart, Menu, User, LogOut, Package } from "lucide-react";
+import { Search, Heart, ShoppingCart, User, LogOut, Package } from "lucide-react";
 import { useAuthStore } from "@/src/store/auth.store";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-
+import Cookies from "js-cookie";
 import { useState, useEffect } from "react"; 
 import { Skeleton } from "@/src/components/ui/skeleton";
 
@@ -48,7 +47,9 @@ export default function Header() {
   const isLoggedIn = !!token; 
 
   const handleLogout = () => {
-    clearAuth();
+    clearAuth(); // 1. Xóa khỏi Zustand / LocalStorage
+    Cookies.remove("auth-token"); // 2. XÓA KHỎI COOKIE
+    
     toast.success("Logged out successfully.");
     router.push("/");
     router.refresh();
