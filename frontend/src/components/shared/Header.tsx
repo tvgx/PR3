@@ -1,4 +1,5 @@
-"use client"; // <-- Biến thành Client Component
+/* eslint-disable react-hooks/set-state-in-effect */
+"use client"; 
 
 import Link from "next/link";
 import {
@@ -20,35 +21,39 @@ import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import { Search, Heart, ShoppingCart, Menu, User, LogOut, Package } from "lucide-react";
-
-// Import auth store và router
 import { useAuthStore } from "@/src/store/auth.store";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+
+// 1. Import useState, useEffect và Skeleton
 import { useState, useEffect } from "react"; 
-import { Skeleton } from "@/src/components/ui/skeleton"; // Thêm Skeleton
+import { Skeleton } from "@/src/components/ui/skeleton";
 
 export default function Header() {
   const router = useRouter();
   
-  // 1. Đọc trạng thái từ Zustand store
+  // 2. Đọc trạng thái từ store (giữ nguyên)
   const { user, token, clearAuth } = useAuthStore((state) => ({
     user: state.user,
     token: state.token,
     clearAuth: state.clearAuth,
   }));
 
+  // 3. Tạo state "isMounted"
   const [isMounted, setIsMounted] = useState(false);
-  
-  // Biến isLoggedIn được tính toán động
+
+  // // 4. Set isMounted thành true CHỈ khi ở client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []); // Mảng rỗng đảm bảo nó chỉ chạy 1 lần
+
   const isLoggedIn = !!token; 
 
-  // 2. Hàm Đăng Xuất
   const handleLogout = () => {
-    clearAuth(); // Xóa token khỏi store
+    clearAuth();
     toast.success("Logged out successfully.");
-    router.push("/"); // Về trang chủ
-    router.refresh(); // Tải lại để đảm bảo trạng thái được cập nhật
+    router.push("/");
+    router.refresh();
   };
 
   return (
@@ -63,12 +68,11 @@ export default function Header() {
       
       {/* Main Header */}
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* Logo */}
         <Link href="/" className="text-2xl font-bold">
           Exclusive
         </Link>
 
-        {/* Navigation (Desktop) - Cập nhật link Sign Up */}
+        {/* Navigation (Desktop) - Giữ nguyên code legacyBehavior */}
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
             <NavigationMenuItem>
@@ -92,14 +96,15 @@ export default function Header() {
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
-            {/* 3. Ẩn "Sign Up" nếu đã đăng nhập */}
-            {!isLoggedIn && (
+            
+            {/* 5. Gói logic 'isLoggedIn' bên trong 'isMounted' */}
+            {isMounted && !isLoggedIn && (
               <NavigationMenuItem>
                 <Link href="/signup" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Sign Up
-                                    </NavigationMenuLink>
-                  </Link>
+                  </NavigationMenuLink>
+                </Link>
               </NavigationMenuItem>
             )}
           </NavigationMenuList>
@@ -124,11 +129,12 @@ export default function Header() {
             </Link>
           </Button>
 
-           {/* 4. LOGIC DROPDOWN TÀI KHOẢN (Đã Cập Nhật) */}
+           {/* 6. SỬA LỖI CHÍNH: Gating Logic */}
            {!isMounted ? (
             // Hiển thị Skeleton (khung xương) khi chưa mount (trên server)
             <Skeleton className="h-9 w-9 rounded-full" />
            ) : isLoggedIn ? (
+            // Hiển thị Dropdown (khi đã mount VÀ đã đăng nhập)
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
@@ -136,7 +142,6 @@ export default function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                {/* Hiển thị tên user thật */}
                 <DropdownMenuLabel>Hi, {user?.name || 'User'}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
@@ -152,7 +157,6 @@ export default function Header() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                {/* Nút Đăng Xuất */}
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Logout</span>
@@ -160,7 +164,7 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
            ) : (
-            // Nếu chưa đăng nhập, nút User sẽ link đến /login
+            // Hiển thị nút Login (khi đã mount VÀ chưa đăng nhập)
             <Button asChild variant="ghost" size="icon">
               <Link href="/login">
                 <User size={20} />
