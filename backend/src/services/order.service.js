@@ -3,10 +3,6 @@ const Product = require('../models/product.model'); // Cần để kiểm tra kh
 const ApiError = require('../utils/ApiError'); // Sẽ tạo sau
 const httpStatus = require('http-status-codes');
 
-/**
- * Lấy giỏ hàng (order có status 'cart') của user
- * Nếu chưa có, tạo một giỏ hàng mới
- */
 const getCart = async (userId) => {
   let cart = await Order.findOne({ userId, status: 'cart' });
   if (!cart) {
@@ -15,11 +11,35 @@ const getCart = async (userId) => {
   return cart;
 };
 
-/**
- * Thêm sản phẩm vào giỏ hàng
- */
+const updateItemQuantity = async (userId, productId, quantity) => {
+  if (quantity < 1) {
+    return removeItemFromCart(userId, productId);
+  }
+  const cart = await getCart(userId);
+  const itemIndex = cart.items.findIndex(
+    (item) => item.productId.toString() === productId
+  );
+  if (itemIndex === -1) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Item not found in cart");
+  }
+  const product = await Product.findById(productId);
+  if (product.stock < quantity) {
+    throw new ApiError(httpStatus.BAD_REQUEST, `Only ${product.stock} items in stock`);
+  }
+  cart.items[itemIndex].quantity = quantity;
+  await cart.save();
+  return cart;
+};
+const removeItemFromCart = async (userId, productId) => {
+  const cart = await getCart(userId);
+  cart.items = cart.items.filter(
+    (item) => item.productId.toString() !== productId
+  );
+
+  await cart.save();
+  return cart;
+};
 const addItemToCart = async (userId, productId, quantity) => {
-  // 1. Kiểm tra tồn kho
   const product = await Product.findById(productId);
   if (!product) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Product not found');
@@ -28,23 +48,17 @@ const addItemToCart = async (userId, productId, quantity) => {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Not enough stock');
   }
 
-  // 2. Lấy giỏ hàng
   const cart = await getCart(userId);
-
-  // 3. Kiểm tra xem sản phẩm đã có trong giỏ chưa
   const existingItemIndex = cart.items.findIndex(
     (item) => item.productId.toString() === productId
   );
 
   if (existingItemIndex > -1) {
-    // Cập nhật số lượng
     cart.items[existingItemIndex].quantity += quantity;
-    // Kiểm tra lại tồn kho sau khi cộng
     if (product.stock < cart.items[existingItemIndex].quantity) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Not enough stock for updated quantity');
     }
   } else {
-    // Thêm sản phẩm mới (ghi dư dữ liệu)
     cart.items.push({
       productId: product._id,
       name: product.name,
@@ -53,22 +67,14 @@ const addItemToCart = async (userId, productId, quantity) => {
       quantity: quantity,
     });
   }
-
-  // 4. Lưu giỏ hàng (totalPrice sẽ tự động cập nhật nhờ 'pre-save' hook)
   await cart.save();
   return cart;
 };
-
-/**
- * Chuyển đổi giỏ hàng thành đơn hàng (Checkout)
- */
 const checkoutCart = async (userId, shippingAddress) => {
   const cart = await getCart(userId);
   if (cart.items.length === 0) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Cart is empty');
   }
-
-  // 1. (Quan trọng) Kiểm tra lại tồn kho cho *tất cả* sản phẩm
   for (const item of cart.items) {
     const product = await Product.findById(item.productId);
     if (!product) {
@@ -78,9 +84,6 @@ const checkoutCart = async (userId, shippingAddress) => {
       throw new ApiError(httpStatus.BAD_REQUEST, `Not enough stock for ${item.name}`);
     }
   }
-
-  // 2. (Quan trọng) Trừ kho hàng
-  // Chúng ta dùng $inc (atomic operation) để đảm bảo an toàn
   const bulkOps = cart.items.map(item => ({
     updateOne: {
       filter: { _id: item.productId },
@@ -88,18 +91,12 @@ const checkoutCart = async (userId, shippingAddress) => {
     }
   }));
   await Product.bulkWrite(bulkOps);
-
-  // 3. Cập nhật đơn hàng (giỏ hàng)
   cart.status = 'pending'; // Chuyển trạng thái từ 'cart' -> 'pending' (chờ thanh toán)
   cart.shippingAddress = shippingAddress;
   await cart.save();
 
-  return cart; // Trả về đơn hàng đã checkout
+  return cart;
 };
-
-/**
- * Lấy lịch sử đơn hàng của user (không lấy giỏ hàng)
- */
 const getMyOrders = async (userId) => {
   return Order.find({ userId, status: { $ne: 'cart' } }).sort({ createdAt: -1 });
 };
@@ -109,4 +106,6 @@ module.exports = {
   addItemToCart,
   checkoutCart,
   getMyOrders,
+  updateItemQuantity,
+  removeItemFromCart,
 };
