@@ -5,9 +5,11 @@ const morgan = require('morgan');
 const passport = require('passport');
 const allRoutes = require('./src/routes');
 const { configurePassport } = require('./src/config/passport');
-const ApiError = require('./src/utils/ApiError'); // <-- SỬA LỖI 3: Thêm './src/'
+const ApiError = require('./src/utils/ApiError');
 const httpStatus = require('http-status-codes');
-
+const path = require('path');
+const allRoutes = require('./src/routes');
+const { configurePassport } = require('./src/config/passport');
 const app = express();
 
 // Middlewares cơ bản
@@ -17,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 // app.options('/*',cors());
 app.use(morgan('dev'));
-
+app.use(express.static(path.join(__dirname, 'public')));
 // Cấu hình Passport
 app.use(passport.initialize());
 configurePassport(passport); // Gọi hàm cấu hình passport
