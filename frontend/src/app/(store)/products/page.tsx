@@ -1,37 +1,25 @@
-// src/app/(store)/products/page.tsx
-
 import Link from "next/link";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/src/components/ui/accordion"; // <-- Đã sửa đường dẫn
-import { Checkbox } from "@/src/components/ui/checkbox"; // <-- Đã sửa đường dẫn
+} from "@/src/components/ui/accordion";
+import { Checkbox } from "@/src/components/ui/checkbox";
 import {
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/src/components/ui/select"; // <-- Đã sửa đường dẫn
+} from "@/src/components/ui/select";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/src/components/ui/pagination"; // <-- Đã sửa đường dẫn
-import { ProductCard } from "@/src/components/features/ProductCard"; // <-- Đã sửa đường dẫn
-import { Separator } from "@/src/components/ui/separator"; // <-- Đã sửa đường dẫn
-import { Product } from "@/src/types"; // <-- Đã sửa đường dẫn (giả sử file types ở src/types/index.ts)
-
-/**
- * 1. Hàm fetch dữ liệu (chạy trên server)
- * Nó sẽ gọi API GET /api/products
- */
+} from "@/src/components/ui/pagination";
+import { ProductCard } from "@/src/components/features/ProductCard";
+import { Separator } from "@/src/components/ui/separator";
+import { Product } from "@/src/types";
 async function getProducts(): Promise<{ products: Product[]; totalPages: number }> {
   try {
     const res = await fetch(
@@ -43,7 +31,7 @@ async function getProducts(): Promise<{ products: Product[]; totalPages: number 
     }
     const data = await res.json();
     return {
-      products: data.products || [], // Đảm bảo products là mảng
+      products: data.products || [],
       totalPages: data.totalPages || 0,
     };
   } catch (error) {
@@ -51,13 +39,7 @@ async function getProducts(): Promise<{ products: Product[]; totalPages: number 
     return { products: [], totalPages: 0 }; // Trả về rỗng nếu lỗi
   }
 }
-
-/**
- * 2. Biến component thành 'async' (Server Component)
- */
 export default async function ProductsPage() {
-  
-  // 3. Gọi và 'await' dữ liệu từ backend
   const { products, totalPages } = await getProducts();
 
   return (
@@ -138,8 +120,6 @@ export default async function ProductsPage() {
     </div>
   );
 }
-
-// Component phụ cho Checkbox (Giữ nguyên)
 const FilterCheckbox = ({ id, label }: { id: string, label: string }) => (
   <div className="flex items-center space-x-2">
     <Checkbox id={id} />

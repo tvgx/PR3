@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import apiClient from "@/src/lib/api-client";
 
-// Icon Google (Giữ nguyên)
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg 

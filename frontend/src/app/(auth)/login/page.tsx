@@ -6,11 +6,14 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import apiClient from "@/src/lib/api-client";
 import { useAuthStore } from "@/src/store/auth.store";
-import Cookies from "js-cookie"; // <-- Import js-cookie
+import Cookies from "js-cookie";
+import { Input } from "@/src/components/ui/input";
+import { Button } from "@/src/components/ui/button";
+import { Link } from "lucide-react";
 
 export default function LogInPage() {
-  const [email] = useState("");
-  const [password] = useState("");
+  const [email,setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
 
@@ -20,27 +23,18 @@ export default function LogInPage() {
     },
     onSuccess: (response) => {
       const { token, user } = response.data;
-      
-      // 1. Lưu vào Zustand (cho client UI)
       setAuth(token, user); 
-      
-      // 2. LƯU TOKEN VÀO COOKIE (CHO SERVER MIDDLEWARE)
-      // Tên cookie này phải được nhớ
       Cookies.set("auth-token", token, {
         expires: 1, // Hết hạn sau 1 ngày
-        secure: process.env.NODE_ENV === "production", // Chỉ gửi qua HTTPS ở production
+        secure: process.env.NODE_ENV === "production",
       });
       
       toast.success("Login successful! Redirecting...");
-      
-      // 3. LOGIC REDIRECT MỚI (THEO YÊU CẦU CỦA BẠN)
       if (user.role === 'admin') {
-        router.push("/admin/dashboard"); // Chuyển đến trang Admin
+        router.push("/admin/dashboard");
       } else {
-        router.push("/"); // Chuyển về trang chủ
+        router.push("/");
       }
-      
-      // Tải lại toàn bộ ứng dụng để đồng bộ
       router.refresh();
     },
     onError: (error: any) => {
@@ -56,10 +50,62 @@ export default function LogInPage() {
     mutation.mutate({ email, password });
   };
 
-  // ... (JSX của form giữ nguyên) ...
   return (
     <div className="flex flex-col gap-6">
-      {/* ... (Form JSX) ... */}
+      <div>
+        <h1 className="text-3xl font-semibold">Log in to Exclusive</h1>
+        <p className="text-sm text-muted-foreground mt-2">
+          Enter your details below
+        </p>
+      </div>
+
+      <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
+          <Input
+            type="text"
+            placeholder="Email or Phone Number"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={mutation.isPending}
+            className="border-0 border-b rounded-none px-0 shadow-none focus-visible:ring-0"
+          />
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={mutation.isPending}
+            className="border-0 border-b rounded-none px-0 shadow-none focus-visible:ring-0"
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-4">
+          <Button
+            type="submit"
+            variant="destructive"
+            className="flex-grow py-6 text-md"
+            disabled={mutation.isPending}
+          >
+            {mutation.isPending ? "Logging in..." : "Log In"}
+          </Button>
+          
+          <Link
+            href="/forgot-password" // Trang này chưa tạo
+            className="text-destructive text-sm hover:underline"
+          >
+            Forgot Password?
+          </Link>
+        </div>
+      </form>
+      <p className="text-center text-sm text-muted-foreground">
+        Don&apos;t have an account?{" "}
+        <Link
+          href="/signup" 
+          className="font-medium text-primary underline"
+        >
+          Sign Up
+        </Link>
+      </p>
     </div>
   );
 }
