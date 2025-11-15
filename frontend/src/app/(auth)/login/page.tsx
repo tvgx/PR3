@@ -28,7 +28,7 @@ export default function LogInPage() {
         expires: 1, // Hết hạn sau 1 ngày
         secure: process.env.NODE_ENV === "production",
       });
-      
+      router.push("/signup");
       toast.success("Login successful! Redirecting...");
       if (user.role === 'admin') {
         router.push("/admin/dashboard");
@@ -90,7 +90,7 @@ export default function LogInPage() {
           </Button>
           
           <Link
-            href="/forgot-password" // Trang này chưa tạo
+            href="/forgot-password" // TODO: Implement forgot password page
             className="text-destructive text-sm hover:underline"
           >
             Forgot Password?
@@ -99,10 +99,7 @@ export default function LogInPage() {
       </form>
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link
-          href="/signup" 
-          className="font-medium text-primary underline"
-        >
+        <Link href="/signup" className="font-medium text-primary underline">
           Sign Up
         </Link>
       </p>

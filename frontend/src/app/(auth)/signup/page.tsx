@@ -35,7 +35,6 @@ export default function SignUpPage() {
 
   const mutation = useMutation({
     mutationFn: (signUpData:  unknown) => {
-      // @better-auth dùng 'name', 'email', 'password'
       return apiClient.post("/auth/register", signUpData);
     },
     onSuccess: () => {
