@@ -8,8 +8,6 @@ const { configurePassport } = require('./src/config/passport');
 const ApiError = require('./src/utils/ApiError');
 const httpStatus = require('http-status-codes');
 const path = require('path');
-const allRoutes = require('./src/routes');
-const { configurePassport } = require('./src/config/passport');
 const app = express();
 
 // Middlewares cơ bản

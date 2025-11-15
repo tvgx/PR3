@@ -53,8 +53,6 @@ export default function NewProductPage() {
       toast.error(message);
     }
   });
-  
-  // Mutation để Tạo sản phẩm (API: POST /api/products)
   const createProductMutation = useMutation({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mutationFn: (newProduct: any) => {
@@ -62,7 +60,7 @@ export default function NewProductPage() {
     },
     onSuccess: () => {
       toast.success("Product created successfully!");
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] }); // Làm mới danh sách
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       router.push("/admin/products");
     },
     onError: (error: unknown) => {
@@ -73,11 +71,8 @@ export default function NewProductPage() {
       toast.error(message);
     },
   });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // 1. Kiểm tra xem đã chọn file chưa
     if (!imageFile) {
       toast.error("Please select an image to upload.");
       return;
