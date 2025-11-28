@@ -17,12 +17,11 @@ import Link from "next/link";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import apiClient, { isAxiosError } from "@/src/lib/api-client";
 import { toast } from "sonner";
-import { useRouter, useParams } from "next/navigation"; // Import useParams
+import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Product } from "@/src/types";
 import { Skeleton } from "@/src/components/ui/skeleton";
 
-// 1. Hàm fetch sản phẩm CŨ
 const fetchProductById = async (id: string): Promise<Product> => {
   const { data } = await apiClient.get(`/products/${id}`);
   return data;
@@ -30,25 +29,22 @@ const fetchProductById = async (id: string): Promise<Product> => {
 
 export default function EditProductPage() {
   const router = useRouter();
-  const params = useParams(); // Hook để lấy [id] từ URL
-  const productId = params.id as string; // Lấy ID
+  const params = useParams();
+  const productId = params.id as string;
 
-  // 2. State cho các trường trong form
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [price, setPrice] = useState(0);
-  const [stock, setStock] = useState(0);
+  const [price, setPrice] = useState<number | "">(0);
+  const [stock, setStock] = useState<number | "">(0);
   const [category, setCategory] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
-  // 3. useQuery: Lấy dữ liệu sản phẩm hiện tại
   const { data: product, isLoading: isLoadingProduct, isError } = useQuery<Product, Error>({
     queryKey: ["admin-product", productId],
     queryFn: () => fetchProductById(productId),
-    enabled: !!productId, // Chỉ chạy khi có productId
+    enabled: !!productId,
   });
 
-  // 4. useEffect: Điền dữ liệu vào form sau khi fetch
   useEffect(() => {
     if (product) {
       setName(product.name);
@@ -60,15 +56,13 @@ export default function EditProductPage() {
     }
   }, [product]);
 
-  // 5. useMutation: Cập nhật sản phẩm
   const mutation = useMutation({
     mutationFn: (updatedProduct: Partial<Product>) => {
-      // Gọi API: PUT /api/products/:id
       return apiClient.put(`/products/${productId}`, updatedProduct);
     },
     onSuccess: () => {
       toast.success("Product updated successfully!");
-      router.push("/admin/products"); // Quay về trang danh sách
+      router.push("/admin/products");
     },
     onError: (error: unknown) => {
       if (isAxiosError(error)) {
@@ -79,11 +73,17 @@ export default function EditProductPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const updatedProduct = { name, description, price, stock, category, imageUrl };
+    const updatedProduct = {
+      name,
+      description,
+      price: price === "" ? 0 : price,
+      stock: stock === "" ? 0 : stock,
+      category,
+      imageUrl
+    };
     mutation.mutate(updatedProduct);
   };
 
-  // 6. Hiển thị Skeleton khi đang tải
   if (isLoadingProduct) {
     return (
       <div className="flex flex-col gap-8">
@@ -104,7 +104,6 @@ export default function EditProductPage() {
     );
   }
 
-  // 7. Hiển thị lỗi nếu không tìm thấy
   if (isError) {
     return (
       <div className="text-center text-destructive">
@@ -133,10 +132,8 @@ export default function EditProductPage() {
           <CardDescription>Update the product information below.</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* 8. Form đã được điền sẵn dữ liệu */}
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Cột 1 */}
+
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="name">Product Name</Label>
@@ -144,34 +141,45 @@ export default function EditProductPage() {
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea 
-                  id="description" 
-                  value={description} 
-                  onChange={(e) => setDescription(e.target.value)} 
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   rows={5}
                 />
               </div>
             </div>
 
-            {/* Cột 2 */}
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="price">Price</Label>
-                  <Input 
-                    id="price" 
+                  <Input
+                    id="price"
                     type="number"
-                    value={price} 
-                    onChange={(e) => setPrice(parseFloat(e.target.value) || 0)} 
+                    value={price}
+                    onFocus={() => price === 0 && setPrice("")}
+                    onBlur={() => price === "" && setPrice(0)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "") setPrice("");
+                      else setPrice(parseFloat(val));
+                    }}
                   />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="stock">Stock</Label>
-                  <Input 
-                    id="stock" 
+                  <Input
+                    id="stock"
                     type="number"
-                    value={stock} 
-                    onChange={(e) => setStock(parseInt(e.target.value) || 0)} 
+                    value={stock}
+                    onFocus={() => stock === 0 && setStock("")}
+                    onBlur={() => stock === "" && setStock(0)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "") setStock("");
+                      else setStock(parseInt(val));
+                    }}
                   />
                 </div>
               </div>
@@ -185,13 +193,12 @@ export default function EditProductPage() {
               </div>
             </div>
 
-            {/* Nút Submit */}
             <div className="md:col-span-2 flex justify-end gap-4 mt-6">
               <Button type="button" variant="outline" onClick={() => router.back()}>
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 variant="destructive"
                 disabled={mutation.isPending}
               >
