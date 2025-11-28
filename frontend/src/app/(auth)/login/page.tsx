@@ -10,9 +10,10 @@ import Cookies from "js-cookie";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import { Link } from "lucide-react";
+import { Separator } from "@radix-ui/react-dropdown-menu";
 
 export default function LogInPage() {
-  const [email,setEmail] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -23,12 +24,12 @@ export default function LogInPage() {
     },
     onSuccess: (response) => {
       const { token, user } = response.data;
-      setAuth(token, user); 
+      setAuth(token, user);
       Cookies.set("auth-token", token, {
         expires: 1, // Hết hạn sau 1 ngày
         secure: process.env.NODE_ENV === "production",
       });
-      router.push("/signup");
+      // router.push("/signup"); // Removed incorrect redirect
       toast.success("Login successful! Redirecting...");
       if (user.role === 'admin') {
         router.push("/admin/dashboard");
@@ -88,15 +89,18 @@ export default function LogInPage() {
           >
             {mutation.isPending ? "Logging in..." : "Log In"}
           </Button>
-          
-          <Link
+
+          {/* <Link
             href="/forgot-password" // TODO: Implement forgot password page
             className="text-destructive text-sm hover:underline"
           >
             Forgot Password?
-          </Link>
+          </Link> */}
         </div>
       </form>
+
+      <Separator />
+
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
         <Link href="/signup" className="font-medium text-primary underline">

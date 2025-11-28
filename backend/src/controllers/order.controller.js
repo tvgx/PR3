@@ -15,7 +15,7 @@ const addItemToCart = catchAsync(async (req, res) => {
 const checkout = catchAsync(async (req, res) => {
   const { shippingAddress } = req.body;
   const order = await orderService.checkoutCart(req.user.id, shippingAddress);
-  res.status(201).json(order); 
+  res.status(201).json(order);
 });
 
 const getMyOrders = catchAsync(async (req, res) => {
@@ -36,11 +36,17 @@ const removeItemFromCart = catchAsync(async (req, res) => {
   res.status(200).json(cart);
 });
 
+const getAllOrders = catchAsync(async (req, res) => {
+  const orders = await orderService.getAllOrders();
+  res.status(200).json(orders);
+});
+
 module.exports = {
   getCart,
   addItemToCart,
   checkout,
   getMyOrders,
+  getAllOrders,
   updateItemQuantity,
   removeItemFromCart,
 };

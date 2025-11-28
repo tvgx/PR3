@@ -31,3 +31,24 @@ export type CartItem = {
   imageUrl: string;
   quantity: number;
 };
+
+export type Order = {
+  _id: string;
+  userId: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  items: {
+    productId: string;
+    name: string;
+    price: number;
+    quantity: number;
+    imageUrl: string;
+  }[];
+  status: 'cart' | 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+  shippingAddress: string;
+  createdAt: string;
+  updatedAt: string;
+  totalAmount?: number; // Optional, calculated on frontend if needed
+};

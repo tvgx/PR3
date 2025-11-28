@@ -101,11 +101,18 @@ const getMyOrders = async (userId) => {
   return Order.find({ userId, status: { $ne: 'cart' } }).sort({ createdAt: -1 });
 };
 
+const getAllOrders = async () => {
+  return Order.find({ status: { $ne: 'cart' } })
+    .populate('userId', 'name email') // Populate user info
+    .sort({ createdAt: -1 });
+};
+
 module.exports = {
   getCart,
   addItemToCart,
   checkoutCart,
   getMyOrders,
+  getAllOrders,
   updateItemQuantity,
   removeItemFromCart,
 };
