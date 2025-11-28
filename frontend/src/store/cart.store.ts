@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { toast } from "sonner";
-import { Product } from "@/src/types"; 
-import apiClient,{ isAxiosError } from "@/src/lib/api-client";
+import { Product } from "@/src/types";
+import apiClient, { isAxiosError } from "@/src/lib/api-client";
 
 export type CartItem = {
   id: string;
@@ -14,16 +14,23 @@ export type CartItem = {
 
 type CartState = {
   items: CartItem[];
+  selectedItemIds: string[]; // [NEW]
   isLoading: boolean;
 
   syncCart: () => Promise<void>;
   addItem: (product: Product, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
-  
+
+  // [NEW] Selection actions
+  toggleItemSelection: (itemId: string) => void;
+  selectAll: (selected: boolean) => void;
+  clearSelection: () => void;
+  getSelectedItems: () => CartItem[];
+
   clearCart: () => void;
   getTotalItems: () => number;
-  getTotalPrice: () => number;
+  getTotalPrice: (onlySelected?: boolean) => number; // [MODIFIED]
 };
 
 type BackendOrderItem = {
@@ -38,6 +45,7 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      selectedItemIds: [], // [NEW]
       isLoading: false,
       syncCart: async () => {
         set({ isLoading: true });
@@ -50,10 +58,10 @@ export const useCartStore = create<CartState>()(
             imageUrl: item.imageUrl,
             quantity: item.quantity,
           }));
-          
+
           set({ items: backendItems });
         } catch (error) {
-          if (isAxiosError(error) && error.response?.status !== 401) { 
+          if (isAxiosError(error) && error.response?.status !== 401) {
             toast.error("Failed to sync cart from server.");
           } else {
             console.error("An unexpected error occurred in syncCart:", error);
@@ -105,6 +113,7 @@ export const useCartStore = create<CartState>()(
 
         set((state) => ({
           items: state.items.filter((item) => item.id !== itemId),
+          selectedItemIds: state.selectedItemIds.filter(id => id !== itemId), // [NEW] Remove from selection too
         }));
 
         try {
@@ -122,7 +131,7 @@ export const useCartStore = create<CartState>()(
           get().removeItem(itemId);
           return;
         }
-        
+
         set({ isLoading: true });
         const oldItems = get().items;
         set((state) => ({
@@ -140,12 +149,41 @@ export const useCartStore = create<CartState>()(
           set({ isLoading: false });
         }
       },
-      clearCart: () => set({ items: [] }),
+
+      // [NEW] Selection Implementations
+      toggleItemSelection: (itemId) => {
+        set((state) => {
+          const isSelected = state.selectedItemIds.includes(itemId);
+          return {
+            selectedItemIds: isSelected
+              ? state.selectedItemIds.filter((id) => id !== itemId)
+              : [...state.selectedItemIds, itemId],
+          };
+        });
+      },
+      selectAll: (selected) => {
+        set((state) => ({
+          selectedItemIds: selected ? state.items.map((item) => item.id) : [],
+        }));
+      },
+      clearSelection: () => set({ selectedItemIds: [] }),
+      getSelectedItems: () => {
+        const state = get();
+        return state.items.filter((item) => state.selectedItemIds.includes(item.id));
+      },
+
+      clearCart: () => set({ items: [], selectedItemIds: [] }),
       getTotalItems: () => get().items.reduce((total, item) => total + item.quantity, 0),
-      getTotalPrice: () => get().items.reduce((total, item) => total + item.price * item.quantity, 0),
+      getTotalPrice: (onlySelected = false) => { // [MODIFIED]
+        const state = get();
+        const itemsToCalculate = onlySelected
+          ? state.items.filter(item => state.selectedItemIds.includes(item.id))
+          : state.items;
+        return itemsToCalculate.reduce((total, item) => total + item.price * item.quantity, 0);
+      },
     }),
     {
-      name: "cart-storage", 
+      name: "cart-storage",
       storage: createJSONStorage(() => localStorage),
     }
   )

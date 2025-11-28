@@ -5,16 +5,27 @@ import { Input } from "@/src/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import Link from "next/link";
 import { Separator } from "@/src/components/ui/separator";
-import { useCartStore } from "@/src/store/cart.store"; // <-- Import Cart Store
+import { useCartStore } from "@/src/store/cart.store";
 import { Trash2 } from "lucide-react";
+import { Checkbox } from "@/src/components/ui/checkbox"; // [NEW]
 
 export default function CartPage() {
-  // 1. Lấy dữ liệu và hàm từ Zustand store
-  const { items, updateQuantity, removeItem, getTotalPrice } = useCartStore();
+  const {
+    items,
+    updateQuantity,
+    removeItem,
+    getTotalPrice,
+    selectedItemIds, // [NEW]
+    toggleItemSelection, // [NEW]
+    selectAll, // [NEW]
+    clearSelection // [NEW]
+  } = useCartStore();
 
-  const subtotal = getTotalPrice();
-  const shipping = 0; // Free
+  const subtotal = getTotalPrice(true); // [MODIFIED] Calculate only selected
+  const shipping = 0; // Free (This logic will be moved to Payment page, but kept here for display consistency if needed, or we can hide it)
   const total = subtotal + shipping;
+
+  const allSelected = items.length > 0 && selectedItemIds.length === items.length;
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -25,7 +36,6 @@ export default function CartPage() {
         <span>Cart</span>
       </div>
 
-      {/* 2. Kiểm tra nếu giỏ hàng trống */}
       {items.length === 0 ? (
         <div className="text-center py-20">
           <h2 className="text-2xl font-semibold mb-4">Your Cart is Empty</h2>
@@ -35,11 +45,16 @@ export default function CartPage() {
         </div>
       ) : (
         <>
-          {/* 3. Hiển thị Cart Items Table */}
           <div className="flex flex-col gap-6">
             {/* Header */}
-            <div className="hidden md:grid grid-cols-5 gap-4 p-4 font-medium shadow-sm rounded-md">
-              <div className="col-span-2">Product</div>
+            <div className="hidden md:grid grid-cols-[auto_2fr_1fr_1fr_1fr] gap-4 p-4 font-medium shadow-sm rounded-md items-center">
+              <div className="w-10 flex justify-center">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={(checked) => selectAll(checked === true)}
+                />
+              </div>
+              <div>Product</div>
               <div>Price</div>
               <div>Quantity</div>
               <div className="text-right">Subtotal</div>
@@ -49,20 +64,32 @@ export default function CartPage() {
             {items.map((item) => (
               <div
                 key={item.id}
-                className="grid grid-cols-3 md:grid-cols-5 gap-4 items-center p-4 shadow-sm rounded-md"
+                className="grid grid-cols-[auto_1fr] md:grid-cols-[auto_2fr_1fr_1fr_1fr] gap-4 items-center p-4 shadow-sm rounded-md"
               >
-                {/* Product */}
-                <div className="flex items-center gap-4 col-span-3 md:col-span-2">
-                  <img src={item.imageUrl || "/placeholder.svg"} alt={item.name} className="w-14 h-14 object-cover rounded" />
-                  <span>{item.name}</span>
-                  <Button variant="ghost" size="icon" onClick={() => removeItem(item.id)}>
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
+                {/* Checkbox */}
+                <div className="w-10 flex justify-center">
+                  <Checkbox
+                    checked={selectedItemIds.includes(item.id)}
+                    onCheckedChange={() => toggleItemSelection(item.id)}
+                  />
                 </div>
+
+                {/* Product */}
+                <div className="flex items-center gap-4">
+                  <img src={item.imageUrl || "/placeholder.svg"} alt={item.name} className="w-14 h-14 object-cover rounded" />
+                  <div className="flex flex-col">
+                    <span className="font-medium">{item.name}</span>
+                    <Button variant="ghost" size="sm" className="w-fit h-auto p-0 text-destructive md:hidden" onClick={() => removeItem(item.id)}>
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+
                 {/* Price */}
                 <div className="hidden md:block">${item.price}</div>
+
                 {/* Quantity */}
-                <div>
+                <div className="flex items-center gap-2">
                   <Input
                     type="number"
                     min="1"
@@ -70,7 +97,11 @@ export default function CartPage() {
                     onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
                     className="w-20"
                   />
+                  <Button variant="ghost" size="icon" onClick={() => removeItem(item.id)} className="hidden md:inline-flex">
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
                 </div>
+
                 {/* Subtotal */}
                 <div className="text-right font-medium">
                   ${item.price * item.quantity}
@@ -84,39 +115,35 @@ export default function CartPage() {
             <Button asChild variant="outline">
               <Link href="/">Return To Shop</Link>
             </Button>
-            {/* <Button variant="outline">Update Cart</Button> (Đã tự động) */}
           </div>
 
-          {/* 4. Coupon and Cart Total */}
-          <div className="flex flex-col md:flex-row justify-between items-start gap-8 mt-12">
-            {/* Coupon */}
-            <div className="flex gap-4">
-              <Input placeholder="Coupon Code" className="w-auto" />
-              <Button variant="destructive">Apply Coupon</Button>
-            </div>
-
-            {/* Cart Total Card */}
+          {/* Cart Total Card */}
+          <div className="flex flex-col md:flex-row justify-end items-start gap-8 mt-12">
             <Card className="w-full md:w-1/3">
               <CardHeader>
                 <CardTitle>Cart Total</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
                 <div className="flex justify-between">
-                  <span>Subtotal:</span>
+                  <span>Subtotal (Selected):</span>
                   <span>${subtotal}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span>Shipping:</span>
-                  <span>{shipping === 0 ? "Free" : `$${shipping}`}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold">
                   <span>Total:</span>
                   <span>${total}</span>
                 </div>
-                <Button asChild variant="destructive" className="w-full mt-4">
-                  <Link href="/checkout">Proceed to checkout</Link>
+                <Button
+                  asChild
+                  variant="destructive"
+                  className="w-full mt-4"
+                  disabled={selectedItemIds.length === 0}
+                >
+                  {selectedItemIds.length === 0 ? (
+                    <span>Select items to buy</span>
+                  ) : (
+                    <Link href="/payment">Buy</Link>
+                  )}
                 </Button>
               </CardContent>
             </Card>
