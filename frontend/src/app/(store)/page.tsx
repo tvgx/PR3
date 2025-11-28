@@ -20,7 +20,7 @@ async function fetchProducts(query: string): Promise<Product[]> {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_GATEWAY_URL}/products?${query}`,
       // Cache data trong 10 phút
-      { next: { revalidate: 600 } } 
+      { next: { revalidate: 600 } }
     );
     if (!res.ok) return [];
     return res.json();
@@ -30,10 +30,12 @@ async function fetchProducts(query: string): Promise<Product[]> {
   }
 }
 
-async function fetchCategories(): Promise<string[]> {
+import { Category } from "@/src/types/category";
+
+async function fetchCategories(): Promise<Category[]> {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_GATEWAY_URL}/products/categories`,
+      `${process.env.NEXT_PUBLIC_API_GATEWAY_URL}/categories`,
       { next: { revalidate: 3600 } } // Cache 1 giờ
     );
     if (!res.ok) return [];
@@ -61,12 +63,12 @@ export default async function HomePage() {
 
   return (
     <div className="container mx-auto px-4 py-8 flex flex-col gap-12 md:gap-16">
-      
+
       {/* 2. Truyền data thật xuống component */}
       <HeroBanner />
       <FlashSales products={flashSalesData} />
       <Separator className="my-6" />
-      <CategoryBrowse categories={categoriesData}/>
+      <CategoryBrowse categories={categoriesData} />
       <Separator className="my-6" />
       <BestSelling products={bestSellingData} />
       <MusicBanner />

@@ -2,7 +2,8 @@
 
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Smartphone, Watch, Camera, Gamepad, Computer, Headset, Shirt } from "lucide-react";
-import Link from "next/link"; // Thêm Link
+import Link from "next/link";
+import { Category } from "@/src/types/category";
 
 // 1. Tạo một đối tượng (map) để liên kết tên category với icon
 // (Bạn có thể mở rộng map này)
@@ -18,8 +19,8 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 // 2. Nhận 'categories' từ props
-export function CategoryBrowse({ categories }: { categories: string[] }) {
-  
+export function CategoryBrowse({ categories }: { categories: Category[] }) {
+
   // 3. Nếu không có icon, dùng icon mặc định
   const getIcon = (name: string) => {
     return iconMap[name] || Shirt; // Dùng 'Shirt' làm mặc định
@@ -34,14 +35,18 @@ export function CategoryBrowse({ categories }: { categories: string[] }) {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {/* 4. Map qua dữ liệu thật */}
-        {categories.map((name) => {
-          const Icon = getIcon(name); // Lấy icon từ map
+        {categories.map((cat) => {
+          const Icon = getIcon(cat.name); // Lấy icon từ map
           return (
-            <Link href={`/products?category=${name}`} key={name}>
-              <Card className="flex flex-col items-center justify-center p-8 aspect-square hover:bg-destructive hover:text-white transition-colors cursor-pointer">
+            <Link href={`/products?category=${cat.name}`} key={cat._id}>
+              <Card className="flex flex-col items-center justify-center p-8 aspect-square hover:bg-destructive hover:text-white transition-colors cursor-pointer group">
                 <CardContent className="p-0 flex flex-col items-center gap-4">
-                  <Icon size={48} strokeWidth={1.5} />
-                  <span className="font-medium">{name}</span>
+                  {cat.imageUrl ? (
+                    <img src={cat.imageUrl} alt={cat.name} className="w-12 h-12 object-contain group-hover:brightness-0 group-hover:invert" />
+                  ) : (
+                    <Icon size={48} strokeWidth={1.5} />
+                  )}
+                  <span className="font-medium text-center">{cat.name}</span>
                 </CardContent>
               </Card>
             </Link>

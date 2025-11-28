@@ -10,7 +10,7 @@ import {
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { Textarea } from "@/src/components/ui/textarea";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import Link from "next/link";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import apiClient, { isAxiosError } from "@/src/lib/api-client";
@@ -37,7 +37,7 @@ export default function NewProductPage() {
   const [price, setPrice] = useState<number | "">(0);
   const [stock, setStock] = useState<number | "">(0);
   const [category, setCategory] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   // Fetch Categories
@@ -90,10 +90,21 @@ export default function NewProductPage() {
     },
   });
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      setImageFiles((prev) => [...prev, ...newFiles]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageFile) {
-      toast.error("Please select an image to upload.");
+    if (imageFiles.length === 0) {
+      toast.error("Please select at least one image.");
       return;
     }
     if (!category) {
@@ -102,11 +113,15 @@ export default function NewProductPage() {
     }
 
     try {
-      const uploadData = await uploadMutation.mutateAsync(imageFile);
-      const imageUrl = uploadData.url;
+      // Upload all images sequentially (or parallel)
+      const uploadPromises = imageFiles.map((file) => uploadMutation.mutateAsync(file));
+      const uploadResults = await Promise.all(uploadPromises);
 
-      if (!imageUrl) {
-        toast.error("Failed to get image URL after upload.");
+      // Extract URLs
+      const imageUrls = uploadResults.map((res) => res.url).filter(Boolean);
+
+      if (imageUrls.length === 0) {
+        toast.error("Failed to upload images.");
         return;
       }
 
@@ -116,7 +131,8 @@ export default function NewProductPage() {
         price: price === "" ? 0 : price,
         stock: stock === "" ? 0 : stock,
         category,
-        imageUrl
+        imageUrl: imageUrls[0], // Main image
+        images: imageUrls, // All images
       };
       await createProductMutation.mutateAsync(newProduct);
 
@@ -222,7 +238,7 @@ export default function NewProductPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {categories?.map((cat) => (
-                      <SelectItem key={cat._id} value={cat.name}>
+                      <SelectItem key={cat._id} value={cat._id}>
                         {cat.name}
                       </SelectItem>
                     ))}
@@ -234,18 +250,36 @@ export default function NewProductPage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="imageFile">Product Image</Label>
+                <Label htmlFor="imageFile">Product Images</Label>
                 <Input
                   id="imageFile"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                      setImageFile(e.target.files[0]);
-                    }
-                  }}
+                  multiple
+                  onChange={handleImageChange}
                   disabled={isCreating}
                 />
+                {/* Image Preview List */}
+                {imageFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {imageFiles.map((file, index) => (
+                      <div key={index} className="relative w-20 h-20 border rounded overflow-hidden group">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt="preview"
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-0 right-0 bg-red-500 text-white p-0.5 rounded-bl opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -269,7 +303,7 @@ export default function NewProductPage() {
       <CategoryModal
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
-        onSuccess={(newCategory) => setCategory(newCategory.name)}
+        onSuccess={(newCategory) => setCategory(newCategory._id)}
       />
     </div>
   );

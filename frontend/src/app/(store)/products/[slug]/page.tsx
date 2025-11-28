@@ -19,7 +19,7 @@ async function getProductData(slug: string): Promise<Product | null> {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_GATEWAY_URL}/products/${slug}`,
-      { next: { revalidate: 3600 } } 
+      { next: { revalidate: 3600 } }
     );
     if (!res.ok) throw new Error("Product not found");
     return res.json();
@@ -31,7 +31,7 @@ async function getProductData(slug: string): Promise<Product | null> {
 
 // Hàm fetch sản phẩm liên quan (MỚI)
 async function getRelatedProducts(category: string): Promise<Product[]> {
-   try {
+  try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_GATEWAY_URL}/products?category=${category}&limit=4`,
       { next: { revalidate: 3600 } }
@@ -44,16 +44,16 @@ async function getRelatedProducts(category: string): Promise<Product[]> {
 }
 
 export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
-  
+
   const product = await getProductData(params.slug);
-  
+
   // Tải sản phẩm liên quan dựa trên danh mục của sản phẩm chính
   const relatedProducts = product ? await getRelatedProducts(product.category) : [];
 
   if (!product) {
     // (Xử lý Not Found giữ nguyên)
     return (
-       <div className="container mx-auto py-16 text-center">...</div>
+      <div className="container mx-auto py-16 text-center">...</div>
     );
   }
 
@@ -70,11 +70,11 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
 
       {/* Phần Thông Tin Chính */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        
+
         {/* Cột 1: Thư Viện Ảnh (Image Gallery) */}
         <Carousel className="w-full">
           <CarouselContent>
-            {/* {(product.images && product.images.length > 0 ? product.images : [product.imageUrl]).map((img, index) => (
+            {(product.images && product.images.length > 0 ? product.images : [product.imageUrl]).map((img, index) => (
               <CarouselItem key={index} className="bg-secondary/30 rounded-md">
                 <img
                   src={img || "/placeholder.svg"}
@@ -82,7 +82,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                   className="w-full h-[400px] object-contain p-8"
                 />
               </CarouselItem>
-            ))} */}
+            ))}
           </CarouselContent>
           <CarouselPrevious className="ml-16" />
           <CarouselNext className="mr-16" />
@@ -119,7 +119,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                   <CarouselItem key={related.id} className="md:basis-1/3 lg:basis-1/4">
                     <ProductCard product={related} />
                   </CarouselItem>
-              ))}
+                ))}
             </CarouselContent>
             <CarouselPrevious className="absolute -left-4 top-1/2 -translate-y-1/2" />
             <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2" />

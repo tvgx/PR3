@@ -8,6 +8,10 @@ import {
 import { Checkbox } from "@/src/components/ui/checkbox";
 import {
   Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/src/components/ui/select";
 import {
   Pagination,
@@ -20,12 +24,16 @@ import {
 import { ProductCard } from "@/src/components/features/ProductCard";
 import { Separator } from "@/src/components/ui/separator";
 import { Product } from "@/src/types";
-async function getProducts(): Promise<{ products: Product[]; totalPages: number }> {
+import { Category } from "@/src/types/category";
+
+async function getProducts(page: number = 1, limit: number = 30, category?: string): Promise<{ products: Product[]; totalPages: number }> {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/products`,
-      { next: { revalidate: 60 } } // Cache 60 giây
-    );
+    let url = `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8000/api'}/products?page=${page}&limit=${limit}`;
+    if (category) {
+      url += `&category=${category}`;
+    }
+
+    const res = await fetch(url, { next: { revalidate: 60 } });
     if (!res.ok) {
       throw new Error("Failed to fetch products");
     }
@@ -36,11 +44,40 @@ async function getProducts(): Promise<{ products: Product[]; totalPages: number 
     };
   } catch (error) {
     console.error(error);
-    return { products: [], totalPages: 0 }; // Trả về rỗng nếu lỗi
+    return { products: [], totalPages: 0 };
   }
 }
-export default async function ProductsPage() {
-  const { products, totalPages } = await getProducts();
+
+async function getCategories(): Promise<Category[]> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8000/api'}/categories`,
+      { next: { revalidate: 3600 } }
+    );
+    if (!res.ok) return [];
+    return res.json();
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const page = Number(resolvedSearchParams?.page) || 1;
+  const categoryParam = resolvedSearchParams?.category as string | undefined;
+  const limit = 30;
+
+  const [productData, categories] = await Promise.all([
+    getProducts(page, limit, categoryParam),
+    getCategories(),
+  ]);
+
+  const { products, totalPages } = productData;
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -52,17 +89,24 @@ export default async function ProductsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-        
-        {/* Cột 1: Sidebar Bộ Lọc (Giữ nguyên) */}
+
+        {/* Cột 1: Sidebar Bộ Lọc */}
         <aside className="col-span-1">
           <h2 className="text-xl font-semibold mb-6">Filters</h2>
           <Accordion type="multiple" defaultValue={["category", "price"]} className="w-full">
-            {/* ... (Code Accordion của bạn giữ nguyên) ... */}
             <AccordionItem value="category">
               <AccordionTrigger className="text-lg">Category</AccordionTrigger>
               <AccordionContent className="flex flex-col gap-3 pt-3">
-                <FilterCheckbox id="shirts" label="Shirts" />
-                <FilterCheckbox id="pants" label="Pants" />
+                {categories.map((cat) => (
+                  <div key={cat._id} className="flex items-center space-x-2">
+                    <Link href={`/products?category=${cat.name}`} className="flex items-center space-x-2 w-full">
+                      <Checkbox id={cat._id} checked={categoryParam === cat.name} />
+                      <label htmlFor={cat._id} className="text-sm font-medium leading-none cursor-pointer">
+                        {cat.name}
+                      </label>
+                    </Link>
+                  </div>
+                ))}
               </AccordionContent>
             </AccordionItem>
             <Separator className="my-4" />
@@ -70,23 +114,32 @@ export default async function ProductsPage() {
               <AccordionTrigger className="text-lg">Price Range</AccordionTrigger>
               <AccordionContent className="flex flex-col gap-3 pt-3">
                 <FilterCheckbox id="price-1" label="$0 - $100" />
+                <FilterCheckbox id="price-2" label="$100 - $200" />
+                <FilterCheckbox id="price-3" label="$200+" />
               </AccordionContent>
             </AccordionItem>
-            {/* ... */}
           </Accordion>
         </aside>
 
         {/* Cột 2: Lưới Sản Phẩm */}
         <main className="col-span-3">
-          {/* Thanh Sắp xếp (Giữ nguyên) */}
+          {/* Thanh Sắp xếp */}
           <div className="flex justify-between items-center mb-6">
             <span className="text-muted-foreground">Showing {products.length} results</span>
             <Select defaultValue="default">
-              {/* ... (Code Select của bạn giữ nguyên) ... */}
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                <SelectItem value="newest">Newest Arrivals</SelectItem>
+              </SelectContent>
             </Select>
           </div>
 
-          {/* 4. Lưới Sản Phẩm (Dùng dữ liệu thật) */}
+          {/* Lưới Sản Phẩm */}
           {products.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
               {products.map((product) => (
@@ -99,19 +152,19 @@ export default async function ProductsPage() {
             </div>
           )}
 
-          {/* 5. Phân trang (Dùng dữ liệu thật) */}
+          {/* Phân trang */}
           {totalPages > 0 && (
             <Pagination className="mt-12">
               <PaginationContent>
-                <PaginationItem><PaginationPrevious href="#" /></PaginationItem>
+                <PaginationItem><PaginationPrevious href={`/products?page=${Math.max(1, page - 1)}`} /></PaginationItem>
                 {Array.from({ length: totalPages }, (_, i) => (
                   <PaginationItem key={i}>
-                    <PaginationLink href="#" isActive={i === 0}>
+                    <PaginationLink href={`/products?page=${i + 1}`} isActive={i + 1 === page}>
                       {i + 1}
                     </PaginationLink>
                   </PaginationItem>
                 ))}
-                <PaginationItem><PaginationNext href="#" /></PaginationItem>
+                <PaginationItem><PaginationNext href={`/products?page=${Math.min(totalPages, page + 1)}`} /></PaginationItem>
               </PaginationContent>
             </Pagination>
           )}
@@ -120,6 +173,7 @@ export default async function ProductsPage() {
     </div>
   );
 }
+
 const FilterCheckbox = ({ id, label }: { id: string, label: string }) => (
   <div className="flex items-center space-x-2">
     <Checkbox id={id} />
