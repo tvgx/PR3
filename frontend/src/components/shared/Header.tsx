@@ -1,4 +1,4 @@
-"use client"; 
+"use client";
 
 import Link from "next/link";
 import {
@@ -23,33 +23,30 @@ import { useAuthStore } from "@/src/store/auth.store";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
-import { useState, useEffect } from "react"; 
+import { useState, useEffect } from "react";
 import { Skeleton } from "@/src/components/ui/skeleton";
 
 export default function Header() {
   const router = useRouter();
-  
+
   // ----- FIX LỖI HYDRATION (getServerSnapshot) -----
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
-  }, []); // Mảng rỗng đảm bảo nó chỉ chạy 1 lần
+  }, []);
 
   // ----- FIX LỖI VÒNG LẶP VÔ HẠN (Maximum update depth) -----
-  // Lấy từng giá trị ra riêng biệt
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
   const clearAuth = useAuthStore((state) => state.clearAuth);
   // ----- KẾT THÚC FIX VÒNG LẶP -----
 
-  const isLoggedIn = !!token; 
+  const isLoggedIn = !!token;
 
   const handleLogout = () => {
-    clearAuth(); // 1. Xóa khỏi Zustand / LocalStorage
-    Cookies.remove("auth-token"); // 2. XÓA KHỎI COOKIE
-    
+    clearAuth();
+    Cookies.remove("auth-token");
     toast.success("Logged out successfully.");
     router.push("/");
     router.refresh();
@@ -57,60 +54,58 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      {/* Top Bar (Giữ nguyên) */}
+      {/* Top Bar */}
       <div className="bg-black text-white text-sm text-center py-2 px-4">
         <p>
-          Summer Sale For All Swim Suits And Free Express Delivery - OFF 50%! 
+          Summer Sale For All Swim Suits And Free Express Delivery - OFF 50%!
           <Link href="#" className="font-semibold underline ml-2">ShopNow</Link>
         </p>
       </div>
-      
+
       {/* Main Header */}
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="text-2xl font-bold">
           Exclusive
         </Link>
 
-        {/* ----- FIX LỖI LỒNG NHAU <a> VÀ LỖI CÚ PHÁP ----- */}
+        {/* Navigation Menu */}
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
             <NavigationMenuItem>
-              {/* ĐÃ SỬA LỖI: Xóa </Link> thừa */}
-              <Link href="/" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link href="/">
                   Home
-                </NavigationMenuLink>
-              </Link> 
+                </Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link href="/contact" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link href="/contact">
                   Contact
-                </NavigationMenuLink>
-              </Link>
+                </Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link href="/about" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link href="/about">
                   About
-                </NavigationMenuLink>
-              </Link>
+                </Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
-            
+
             {isMounted && !isLoggedIn && (
               <NavigationMenuItem>
-                <Link href="/signup" legacyBehavior passHref>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                  <Link href="/signup">
                     Sign Up
-                  </NavigationMenuLink>
-                </Link>
+                  </Link>
+                </NavigationMenuLink>
               </NavigationMenuItem>
             )}
           </NavigationMenuList>
         </NavigationMenu>
-        {/* ----- KẾT THÚC FIX LỖI ----- */}
 
-        {/* Search và Icons (Desktop) */}
+        {/* Search and Icons */}
         <div className="hidden md:flex items-center gap-4">
           <div className="relative">
             <Input
@@ -129,10 +124,10 @@ export default function Header() {
             </Link>
           </Button>
 
-           {/* Logic Dropdown (Đã có 'isMounted' fix) */}
-           {!isMounted ? (
+          {/* User Dropdown */}
+          {!isMounted ? (
             <Skeleton className="h-9 w-9 rounded-full" />
-           ) : isLoggedIn ? (
+          ) : isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
@@ -161,19 +156,14 @@ export default function Header() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-           ) : (
+          ) : (
             <Button asChild variant="ghost" size="icon">
               <Link href="/login">
                 <User size={20} />
               </Link>
             </Button>
-           )}
-           {/* --- KẾT THÚC LOGIC DROPDOWN --- */}
-
+          )}
         </div>
-
-        {/* Mobile Menu Trigger (Giữ nguyên) */}
-        {/* ... */}
       </div>
     </header>
   );
