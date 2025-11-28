@@ -6,7 +6,7 @@ if (!JWT_SECRET_KEY) {
   throw new Error("JWT_SECRET_KEY is not defined in .env.local");
 }
 const secret = new TextEncoder().encode(JWT_SECRET_KEY);
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/admin')) {
     const token = request.cookies.get('auth-token')?.value;
     if (!token) {
