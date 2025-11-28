@@ -6,6 +6,7 @@ const wishlistRoutes = require('./wishlist.routes');
 const userRoutes = require('./user.routes');
 const dashboardRoutes = require('./dashboard.routes');
 const uploadRoutes = require('./upload.routes');
+const categoryRoutes = require('./category.routes');
 const router = express.Router();
 
 router.use('/auth', authRoutes);
@@ -15,5 +16,6 @@ router.use('/wishlist', wishlistRoutes);
 router.use('/users', userRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/categories', categoryRoutes);
 
 module.exports = router;
