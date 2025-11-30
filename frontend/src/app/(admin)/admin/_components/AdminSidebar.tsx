@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/src/components/ui/button";
-import { LayoutDashboard, ShoppingBag, Package, ListTree } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Package, ListTree, Calendar } from "lucide-react";
 
 // Định nghĩa các link (theo ảnh)
 const navLinks = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "All Products", icon: ShoppingBag },
   { href: "/admin/orders", label: "Order List", icon: Package },
-  { href: "/admin/categories", label: "Categories", icon: ListTree }, // (Trang này chưa tạo)
+  { href: "/admin/categories", label: "Categories", icon: ListTree },
+  { href: "/admin/events", label: "Events", icon: Calendar },
 ];
 
 export function AdminSidebar() {
@@ -27,18 +28,18 @@ export function AdminSidebar() {
           </h2>
         </Link>
       </div>
-      
+
       <nav className="flex-1 p-4">
         <ul className="flex flex-col gap-2">
           {navLinks.map((link) => {
             const isActive = pathname.startsWith(link.href);
-            
+
             return (
               <li key={link.href}>
                 <Button
                   asChild
                   // Dùng màu 'destructive' (đỏ) làm màu active
-                  variant={isActive ? "destructive" : "ghost"} 
+                  variant={isActive ? "destructive" : "ghost"}
                   className="w-full justify-start gap-3"
                 >
                   <Link href={link.href}>

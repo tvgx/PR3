@@ -1,21 +1,29 @@
 // src/app/(store)/_components/CategoryBrowse.tsx
 
 import { Card, CardContent } from "@/src/components/ui/card";
-import { Smartphone, Watch, Camera, Gamepad, Computer, Headset, Shirt } from "lucide-react";
+import { Smartphone, Watch, Camera, Gamepad, Computer, Headset, Shirt, Home, Activity, Heart, ShoppingBasket, Trophy, Baby } from "lucide-react";
 import Link from "next/link";
 import { Category } from "@/src/types/category";
 
 // 1. Tạo một đối tượng (map) để liên kết tên category với icon
 // (Bạn có thể mở rộng map này)
 const iconMap: { [key: string]: React.ElementType } = {
+  "Woman Fashion": Shirt,
+  "Men Fashion": Shirt,
+  "Men's clothing": Shirt,
+  "Electronics": Smartphone,
+  "Home & Lifestyle": Home,
+  "Medicine": Activity,
+  "Sports & Outdoor": Trophy,
+  "Baby's & Toys": Baby,
+  "Groceries & Pets": ShoppingBasket,
+  "Health & Beauty": Heart,
   "Phones": Smartphone,
   "Computers": Computer,
   "SmartWatch": Watch,
   "Camera": Camera,
   "HeadPhones": Headset,
   "Gaming": Gamepad,
-  "Apparel": Shirt, // Ví dụ cho shop quần áo
-  "Men's Fashion": Shirt,
 };
 
 // 2. Nhận 'categories' từ props

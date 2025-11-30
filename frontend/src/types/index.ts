@@ -53,3 +53,13 @@ export type Order = {
   updatedAt: string;
   totalAmount?: number; // Optional, calculated on frontend if needed
 };
+
+export type Event = {
+  _id: string;
+  name: string;
+  type: 'flash-sale' | 'music-banner' | 'other';
+  startDate: string;
+  endDate: string;
+  products: Product[];
+  isActive: boolean;
+};

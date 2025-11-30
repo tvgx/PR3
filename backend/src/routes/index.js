@@ -17,5 +17,6 @@ router.use('/users', userRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/categories', categoryRoutes);
+router.use('/events', require('./event.routes'));
 
 module.exports = router;

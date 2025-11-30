@@ -1,5 +1,5 @@
 // src/app/(store)/_components/FlashSales.tsx
-// KHÔNG CẦN "use client" nữa
+"use client";
 
 import { ProductCard } from "@/src/components/features/ProductCard";
 import {
@@ -10,18 +10,72 @@ import {
   CarouselPrevious,
 } from "@/src/components/ui/carousel";
 import { Button } from "@/src/components/ui/button";
-import { Product } from "@/src/types";
+import { Event } from "@/src/types";
+import { useEffect, useState } from "react";
+import { intervalToDuration } from "date-fns";
 
-// Nhận 'products' từ props (do page.tsx truyền xuống)
-export function FlashSales({ products }: { products: Product[] }) {
+// Nhận 'event' từ props
+export function FlashSales({ event }: { event: Event | null }) {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    if (!event) return;
+
+    const timer = setInterval(() => {
+      const now = new Date();
+      const end = new Date(event.endDate);
+
+      if (now >= end) {
+        clearInterval(timer);
+        return;
+      }
+
+      const duration = intervalToDuration({ start: now, end });
+      setTimeLeft({
+        days: duration.days || 0,
+        hours: duration.hours || 0,
+        minutes: duration.minutes || 0,
+        seconds: duration.seconds || 0,
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [event]);
+
+  if (!event) return null;
+
+  const products = event.products || [];
+
   return (
     <section>
       <div className="flex items-end justify-between mb-6">
         <div>
           <p className="text-destructive font-semibold text-sm mb-4">Today</p>
-          <h2 className="text-3xl font-semibold">Flash Sales</h2>
+          <h2 className="text-3xl font-semibold">{event.name}</h2>
         </div>
-        {/* ... (Đồng hồ đếm ngược) ... */}
+
+        {/* Countdown */}
+        <div className="flex gap-4 items-end">
+          <div className="text-center">
+            <span className="text-xs font-medium">Days</span>
+            <div className="text-3xl font-bold">{String(timeLeft.days).padStart(2, '0')}</div>
+          </div>
+          <span className="text-3xl font-bold text-destructive">:</span>
+          <div className="text-center">
+            <span className="text-xs font-medium">Hours</span>
+            <div className="text-3xl font-bold">{String(timeLeft.hours).padStart(2, '0')}</div>
+          </div>
+          <span className="text-3xl font-bold text-destructive">:</span>
+          <div className="text-center">
+            <span className="text-xs font-medium">Minutes</span>
+            <div className="text-3xl font-bold">{String(timeLeft.minutes).padStart(2, '0')}</div>
+          </div>
+          <span className="text-3xl font-bold text-destructive">:</span>
+          <div className="text-center">
+            <span className="text-xs font-medium">Seconds</span>
+            <div className="text-3xl font-bold">{String(timeLeft.seconds).padStart(2, '0')}</div>
+          </div>
+        </div>
       </div>
 
       {/* Hiển thị dữ liệu */}
@@ -42,7 +96,7 @@ export function FlashSales({ products }: { products: Product[] }) {
       )}
 
       <div className="flex justify-center mt-8">
-        <Button variant="destructive">View All</Button>
+        <Button variant="destructive">View All Products</Button>
       </div>
     </section>
   );

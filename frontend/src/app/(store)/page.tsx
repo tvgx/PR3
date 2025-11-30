@@ -11,7 +11,7 @@ import { NewArrival } from "./components/NewArrival";
 import { Features } from "./components/Features";
 
 // Định nghĩa kiểu dữ liệu (bạn có thể chuyển ra file types.ts)
-import { Product } from "@/src/types";
+import { Product, Event } from "@/src/types";
 
 
 // Hàm fetch data (chạy trên server)
@@ -46,34 +46,52 @@ async function fetchCategories(): Promise<Category[]> {
   }
 }
 
+async function fetchActiveEvent(type: string): Promise<Event | null> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_GATEWAY_URL}/events/active/${type}`,
+      { next: { revalidate: 60 } }
+    );
+    if (!res.ok) return null;
+    return res.json();
+  } catch (error) {
+    console.error(`Failed to fetch active event ${type}:`, error);
+    return null;
+  }
+}
+
 // Biến trang chủ thành 'async'
 export default async function HomePage() {
   // 1. Gọi tất cả API song song
   const [
-    flashSalesData,
     bestSellingData,
     exploreProductsData,
     categoriesData,
+    flashSaleEvent,
+    musicEvent,
+    newArrivalData,
   ] = await Promise.all([
-    fetchProducts("tag=flash-sale&limit=4"),
     fetchProducts("tag=best-selling&limit=4"),
     fetchProducts("limit=8"),
     fetchCategories(),
+    fetchActiveEvent("flash-sale"),
+    fetchActiveEvent("music-banner"),
+    fetchProducts("sort=-createdAt&limit=4"), // New Arrivals
   ]);
 
   return (
     <div className="container mx-auto px-4 py-8 flex flex-col gap-12 md:gap-16">
 
       {/* 2. Truyền data thật xuống component */}
-      <HeroBanner />
-      <FlashSales products={flashSalesData} />
+      <HeroBanner categories={categoriesData} />
+      <FlashSales event={flashSaleEvent} />
       <Separator className="my-6" />
       <CategoryBrowse categories={categoriesData} />
       <Separator className="my-6" />
       <BestSelling products={bestSellingData} />
-      <MusicBanner />
+      <MusicBanner event={musicEvent} />
       <ExploreProducts products={exploreProductsData} />
-      <NewArrival />
+      <NewArrival products={newArrivalData} />
       <Features />
 
     </div>
