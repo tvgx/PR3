@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { persist, createJSONStorage, StateStorage } from "zustand/middleware";
+import Cookies from "js-cookie";
 
 // Định nghĩa kiểu User (dựa trên @better-auth và hook của chúng ta)
 type User = {
@@ -16,7 +17,20 @@ type AuthState = {
   clearAuth: () => void;
 };
 
-// 'persist' sẽ tự động lưu token vào localStorage
+// Custom cookie storage adapter
+const cookieStorage: StateStorage = {
+  getItem: (name: string): string | null => {
+    return Cookies.get(name) || null;
+  },
+  setItem: (name: string, value: string): void => {
+    Cookies.set(name, value, { expires: 7 }); // 7 days expiry
+  },
+  removeItem: (name: string): void => {
+    Cookies.remove(name);
+  },
+};
+
+// 'persist' sẽ tự động lưu token vào cookies với thời hạn 7 ngày
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -26,8 +40,8 @@ export const useAuthStore = create<AuthState>()(
       clearAuth: () => set({ token: null, user: null }),
     }),
     {
-      name: "auth-storage", // Tên key trong localStorage
-      storage: createJSONStorage(() => localStorage),
+      name: "auth-storage", // Tên key trong cookies
+      storage: createJSONStorage(() => cookieStorage),
     }
   )
 );

@@ -59,13 +59,13 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
 
   return (
     <div className="container mx-auto px-4 py-12">
-      {/* Breadcrumb (giữ nguyên) */}
+      {/* Breadcrumb */}
       <div className="text-sm text-muted-foreground mb-8">
         <Link href="/" className="hover:underline">Home</Link>
-        <span className="mx-2">/</span>
-        <Link href="/products" className="hover:underline">Products</Link>
-        <span className="mx-2">/</span>
-        <span>{product.name}</span>
+        <span className="mx-2">&gt;&gt;</span>
+        <Link href="/products" className="hover:underline">products</Link>
+        <span className="mx-2">&gt;&gt;</span>
+        <Link href={`/products/${product.id}`} className="hover:underline">{product.name}</Link>
       </div>
 
       {/* Phần Thông Tin Chính */}

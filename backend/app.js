@@ -9,6 +9,7 @@ const ApiError = require('./src/utils/ApiError');
 const httpStatus = require('http-status-codes');
 const path = require('path');
 const app = express();
+const { PayOS } = require('@payos/node');
 
 // Middlewares cơ bản
 app.use(helmet());
@@ -33,7 +34,7 @@ app.use((req, res, next) => {
 // Middleware xử lý lỗi chung (bắt lỗi từ catchAsync)
 app.use((err, req, res, next) => {
   let { statusCode, message } = err;
-  
+
   // Nếu là lỗi không phải do chúng ta định nghĩa, set 500
   if (!(err instanceof ApiError)) {
     statusCode = httpStatus.INTERNAL_SERVER_ERROR;
@@ -41,10 +42,10 @@ app.use((err, req, res, next) => {
   }
 
   console.error(err); // Log lỗi ra console
-  
-  res.status(statusCode).send({ 
-    code: statusCode, 
-    message 
+
+  res.status(statusCode).send({
+    code: statusCode,
+    message
   });
 });
 module.exports = app;

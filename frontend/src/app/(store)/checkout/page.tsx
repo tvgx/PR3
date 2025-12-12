@@ -29,6 +29,8 @@ export default function CheckoutPage() {
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [country, setCountry] = useState("Vietnam");
+  const [paymentMethod, setPaymentMethod] = useState("cod");
+
   useEffect(() => {
     if (!token) {
       toast.error("Please log in to proceed to checkout.");
@@ -59,6 +61,37 @@ export default function CheckoutPage() {
     }
   });
 
+  // PayOS Payment Mutation
+  const payOSMutation = useMutation({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mutationFn: async (orderData: any) => {
+      // First create the order
+      const orderResponse = await apiClient.post("/orders", { shippingAddress: orderData.shippingAddress });
+      const orderId = orderResponse.data._id;
+
+      // Then create payment link
+      const paymentResponse = await apiClient.post("/payment/create-payment-link", {
+        orderId: orderId,
+        amount: total,
+        description: `Payment for order ${orderId}`,
+        returnUrl: `${window.location.origin}/payment/success`,
+        cancelUrl: `${window.location.origin}/payment/failed`,
+      });
+
+      return paymentResponse.data;
+    },
+    onSuccess: (data) => {
+      // Redirect to PayOS checkout
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      }
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to create payment link.");
+    }
+  });
+
   // 6. Hàm xử lý khi nhấn nút "Place Order"
   const handlePlaceOrder = () => {
     // Kiểm tra form
@@ -66,17 +99,24 @@ export default function CheckoutPage() {
       toast.error("Please fill in all required shipping details.");
       return;
     }
-    
+
     const shippingAddress = {
       street: streetAddress,
       city: city,
       postalCode: postalCode,
       country: country,
     };
-    
-    // Gọi API
-    mutation.mutate(shippingAddress);
+
+    // Check payment method
+    if (paymentMethod === "payos") {
+      // Use PayOS
+      payOSMutation.mutate({ shippingAddress });
+    } else {
+      // Use COD
+      mutation.mutate(shippingAddress);
+    }
   };
+
 
   // Nếu giỏ hàng trống hoặc đang tải, không hiển thị gì
   if (items.length === 0) {
@@ -103,24 +143,24 @@ export default function CheckoutPage() {
         <div className="flex flex-col gap-6">
           <h1 className="text-3xl font-semibold">Billing Details</h1>
           <form className="flex flex-col gap-4">
-            <Input 
-              placeholder="First Name*" 
+            <Input
+              placeholder="First Name*"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
             />
             <Input placeholder="Company Name" />
-            <Input 
+            <Input
               placeholder="Street Address*"
               value={streetAddress}
               onChange={(e) => setStreetAddress(e.target.value)}
             />
             <Input placeholder="Apartment, floor, etc. (optional)" />
-            <Input 
+            <Input
               placeholder="Town/City*"
               value={city}
               onChange={(e) => setCity(e.target.value)}
             />
-            <Input 
+            <Input
               placeholder="Postal Code*"
               value={postalCode}
               onChange={(e) => setPostalCode(e.target.value)}
@@ -149,7 +189,7 @@ export default function CheckoutPage() {
               <span>${item.price * item.quantity}</span>
             </div>
           ))}
-          
+
           <Separator />
           {/* Totals */}
           <div className="flex justify-between">
@@ -167,10 +207,11 @@ export default function CheckoutPage() {
             <span>${total}</span>
           </div>
 
-          {/* Payment Method (Giữ nguyên) */}
-          <RadioGroup defaultValue="cod" className="gap-4 mt-4">
-            <div className="flex items-center justify-between">
-               {/* ... (Bank option) */}
+          {/* Payment Method */}
+          <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="gap-4 mt-4">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="payos" id="payos" />
+              <Label htmlFor="payos">Bank Transfer (PayOS)</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="cod" id="cod" />
@@ -184,14 +225,14 @@ export default function CheckoutPage() {
             <Button variant="destructive">Apply Coupon</Button>
           </div>
 
-          <Button 
-            variant="destructive" 
-            size="lg" 
+          <Button
+            variant="destructive"
+            size="lg"
             className="mt-4"
             onClick={handlePlaceOrder}
-            disabled={mutation.isPending} // Vô hiệu hóa nút khi đang đặt hàng
+            disabled={mutation.isPending || payOSMutation.isPending}
           >
-            {mutation.isPending ? "Placing Order..." : "Place Order"}
+            {mutation.isPending || payOSMutation.isPending ? "Processing..." : "Place Order"}
           </Button>
         </div>
       </div>

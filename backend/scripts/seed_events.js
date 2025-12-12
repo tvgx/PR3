@@ -22,11 +22,12 @@ const seedEvents = async () => {
         const productIds = products.map(p => p._id);
 
         // 2. Create Flash Sale Event
+        const now = new Date();
         const flashSale = {
             name: "Super Flash Sale",
             type: "flash-sale",
-            startDate: new Date(),
-            endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+            startDate: now,
+            endDate: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
             products: productIds,
             isActive: true
         };
@@ -42,8 +43,8 @@ const seedEvents = async () => {
         const musicEvent = {
             name: "Enhance Your Music Experience",
             type: "music-banner",
-            startDate: new Date(),
-            endDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
+            startDate: now,
+            endDate: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
             products: [], // Can be empty for banner only
             isActive: true
         };

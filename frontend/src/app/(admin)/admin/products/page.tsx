@@ -43,7 +43,7 @@ import {
   PaginationPrevious,
 } from "@/src/components/ui/pagination";
 import { Badge } from "@/src/components/ui/badge";
-import { PlusCircle, MoreHorizontal} from "lucide-react";
+import { PlusCircle, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient, { isAxiosError } from "@/src/lib/api-client";
@@ -83,7 +83,7 @@ export default function AdminProductsPage() {
       toast.success("Product deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
     },
-    onError: (error: unknown) => { 
+    onError: (error: unknown) => {
       let message = "Failed to delete product.";
       if (isAxiosError(error)) {
         message = error.response?.data?.message || message;
@@ -111,7 +111,7 @@ export default function AdminProductsPage() {
             </ul>
           </CardContent>
         </Card>
-      </div> 
+      </div>
       <div className="col-span-3">
         {/* Header (Nút Add New - giữ nguyên) */}
         <div className="flex justify-between items-center mb-6">
@@ -196,7 +196,7 @@ export default function AdminProductsPage() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  This action cannot be undone. This will permanently delete 
+                                  This action cannot be undone. This will permanently delete
                                   the product "{product.name}".
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
@@ -219,7 +219,7 @@ export default function AdminProductsPage() {
                 </TableBody>
               </Table>
             )}
-            
+
           </CardContent>
         </Card>
 
