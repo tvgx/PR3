@@ -1,5 +1,6 @@
 // src/app/(store)/_components/ExploreProducts.tsx
 
+import Link from "next/link";
 import { ProductCard } from "@/src/components/features/ProductCard";
 import { Button } from "@/src/components/ui/button";
 
@@ -11,8 +12,8 @@ export function ExploreProducts({ products }: { products: Product[] }) {
   return (
     <section>
       <div className="mb-6">
-        <p className="text-destructive font-semibold text-sm mb-4">Our Products</p>
-        <h2 className="text-3xl font-semibold">Explore Our Products</h2>
+        <p className="text-destructive font-semibold text-sm mb-4">Sản phẩm của chúng tôi</p>
+        <h2 className="text-3xl font-semibold">Khám phá sản phẩm</h2>
       </div>
 
       {products && products.length > 0 ? (
@@ -22,13 +23,15 @@ export function ExploreProducts({ products }: { products: Product[] }) {
           ))}
         </div>
       ) : (
-         <p className="text-muted-foreground">No products available to explore.</p>
+        <p className="text-muted-foreground">Không có sản phẩm để khám phá.</p>
       )}
-      
+
       <div className="flex justify-center mt-12">
-        <Button variant="destructive" size="lg">
-          View All Products
-        </Button>
+        <Link href="/products">
+          <Button variant="destructive" size="lg">
+            Xem tất cả sản phẩm
+          </Button>
+        </Link>
       </div>
     </section>
   );

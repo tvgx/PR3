@@ -1,6 +1,7 @@
 // src/app/(store)/_components/FlashSales.tsx
 "use client";
 
+import Link from "next/link";
 import { ProductCard } from "@/src/components/features/ProductCard";
 import {
   Carousel,
@@ -50,29 +51,29 @@ export function FlashSales({ event }: { event: Event | null }) {
     <section>
       <div className="flex items-end justify-between mb-6">
         <div>
-          <p className="text-destructive font-semibold text-sm mb-4">Today</p>
+          <p className="text-destructive font-semibold text-sm mb-4">Hôm nay</p>
           <h2 className="text-3xl font-semibold">{event.name}</h2>
         </div>
 
         {/* Countdown */}
         <div className="flex gap-4 items-end">
           <div className="text-center">
-            <span className="text-xs font-medium">Days</span>
+            <span className="text-xs font-medium">Ngày</span>
             <div className="text-3xl font-bold">{String(timeLeft.days).padStart(2, '0')}</div>
           </div>
           <span className="text-3xl font-bold text-destructive">:</span>
           <div className="text-center">
-            <span className="text-xs font-medium">Hours</span>
+            <span className="text-xs font-medium">Giờ</span>
             <div className="text-3xl font-bold">{String(timeLeft.hours).padStart(2, '0')}</div>
           </div>
           <span className="text-3xl font-bold text-destructive">:</span>
           <div className="text-center">
-            <span className="text-xs font-medium">Minutes</span>
+            <span className="text-xs font-medium">Phút</span>
             <div className="text-3xl font-bold">{String(timeLeft.minutes).padStart(2, '0')}</div>
           </div>
           <span className="text-3xl font-bold text-destructive">:</span>
           <div className="text-center">
-            <span className="text-xs font-medium">Seconds</span>
+            <span className="text-xs font-medium">Giây</span>
             <div className="text-3xl font-bold">{String(timeLeft.seconds).padStart(2, '0')}</div>
           </div>
         </div>
@@ -92,11 +93,13 @@ export function FlashSales({ event }: { event: Event | null }) {
           <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2" />
         </Carousel>
       ) : (
-        <p className="text-muted-foreground">No flash sale products available.</p>
+        <p className="text-muted-foreground">Không có sản phẩm flash sale.</p>
       )}
 
       <div className="flex justify-center mt-8">
-        <Button variant="destructive">View All Products</Button>
+        <Link href="/products">
+          <Button variant="destructive">Xem tất cả sản phẩm</Button>
+        </Link>
       </div>
     </section>
   );

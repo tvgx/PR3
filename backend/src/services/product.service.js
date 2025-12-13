@@ -24,7 +24,13 @@ const queryProducts = async (filters, options) => {
   if (filters.tag) {
     query.tags = { $in: [filters.tag] };
   }
-  // TODO: Thêm logic lọc theo giá
+
+  // Lọc theo giá
+  if (filters.minPrice || filters.maxPrice) {
+    query.price = {};
+    if (filters.minPrice) query.price.$gte = parseInt(filters.minPrice, 10);
+    if (filters.maxPrice) query.price.$lte = parseInt(filters.maxPrice, 10);
+  }
   const limit = parseInt(options.limit, 10) || 40;
   const page = parseInt(options.page, 10) || 1;
   const skip = (page - 1) * limit;

@@ -13,11 +13,17 @@ export type Product = {
   stock: number;
   category: string;
   imageUrl: string;
-  images?: string[];
+  images: string[];
   rating: number;
   reviewCount: number;
   discount?: string;
   tags?: string[];
+  colors: string[];
+  sizes: string[];
+  averageRating?: number;
+  totalReviews?: number;
+  // MongoDB often returns _id, so we add it as optional compatibility
+  _id?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -25,13 +31,15 @@ export type Product = {
 /**
  * Định nghĩa cho 1 item trong Giỏ hàng (Cart)
  */
-export type CartItem = {
-  id: string; // Product ID
+export interface CartItem {
+  id: string; // This will map to product.id or product._id
   name: string;
   price: number;
   imageUrl: string;
   quantity: number;
-};
+  color?: string;
+  size?: string;
+}
 
 export type Order = {
   _id: string;

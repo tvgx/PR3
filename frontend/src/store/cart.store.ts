@@ -75,11 +75,14 @@ export const useCartStore = create<CartState>()(
         const oldItems = get().items;
         const existingItem = get().items.find((item) => item.id === product.id);
         const newQuantity = existingItem ? existingItem.quantity + quantity : quantity;
+
         if (newQuantity > product.stock) {
-          toast.error(`Only ${product.stock} items in stock for ${product.name}.`);
+          toast.error(`Chỉ còn ${product.stock} sản phẩm ${product.name}.`);
           set({ isLoading: false });
           return;
         }
+
+        // Optimistic update
         if (existingItem) {
           set((state) => ({
             items: state.items.map((item) =>
@@ -96,11 +99,13 @@ export const useCartStore = create<CartState>()(
           };
           set((state) => ({ items: [...state.items, newItem] }));
         }
+
         try {
           await apiClient.post("/orders/cart", { productId: product.id, quantity });
-          toast.success(`${product.name} added to cart.`);
+          toast.success(`Đã thêm thành công ${product.name} vào giỏ hàng.`);
         } catch (error) {
           toast.error(`Failed to add ${product.name} to cart.`);
+          // Revert logic on failure
           set({ items: oldItems });
         } finally {
           set({ isLoading: false });

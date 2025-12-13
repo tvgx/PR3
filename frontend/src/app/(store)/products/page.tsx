@@ -1,12 +1,5 @@
 import Link from "next/link";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/src/components/ui/accordion";
-import { Checkbox } from "@/src/components/ui/checkbox";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -22,15 +15,29 @@ import {
   PaginationPrevious,
 } from "@/src/components/ui/pagination";
 import { ProductCard } from "@/src/components/features/ProductCard";
-import { Separator } from "@/src/components/ui/separator";
 import { Product } from "@/src/types";
 import { Category } from "@/src/types/category";
+import { ProductFilters } from "./ProductFilters";
+import { Button } from "@/src/components/ui/button";
+import { useRouter } from "next/navigation";
 
-async function getProducts(page: number = 1, limit: number = 30, category?: string): Promise<{ products: Product[]; totalPages: number }> {
+async function getProducts(
+  page: number = 1,
+  limit: number = 30,
+  category?: string,
+  minPrice?: string,
+  maxPrice?: string
+): Promise<{ products: Product[]; totalPages: number }> {
   try {
     let url = `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8000/api'}/products?page=${page}&limit=${limit}`;
     if (category) {
       url += `&category=${category}`;
+    }
+    if (minPrice) {
+      url += `&minPrice=${minPrice}`;
+    }
+    if (maxPrice) {
+      url += `&maxPrice=${maxPrice}`;
     }
 
     const res = await fetch(url, { next: { revalidate: 60 } });
@@ -62,6 +69,21 @@ async function getCategories(): Promise<Category[]> {
   }
 }
 
+function SelectAllButton() {
+  // Client component wrapper can be used, but since this is a server component file, 
+  // we might need to make a small client component or just inline it if we convert this page to use client logic for buttons,
+  // but this page is async server component. 
+  // Actually, we can just use a <Link> or a Client Component for the button.
+  // Let's create a Client Component for the button to access router.
+  return (
+    <div className="mb-6">
+      <Link href="/products">
+        <Button variant="outline">Chọn toàn bộ</Button>
+      </Link>
+    </div>
+  );
+}
+
 export default async function ProductsPage({
   searchParams,
 }: {
@@ -70,10 +92,12 @@ export default async function ProductsPage({
   const resolvedSearchParams = await searchParams;
   const page = Number(resolvedSearchParams?.page) || 1;
   const categoryParam = resolvedSearchParams?.category as string | undefined;
+  const minPriceParam = resolvedSearchParams?.minPrice as string | undefined;
+  const maxPriceParam = resolvedSearchParams?.maxPrice as string | undefined;
   const limit = 30;
 
   const [productData, categories] = await Promise.all([
-    getProducts(page, limit, categoryParam),
+    getProducts(page, limit, categoryParam, minPriceParam, maxPriceParam),
     getCategories(),
   ]);
 
@@ -83,58 +107,36 @@ export default async function ProductsPage({
     <div className="container mx-auto px-4 py-12">
       {/* Breadcrumb */}
       <div className="text-sm text-muted-foreground mb-8">
-        <Link href="/" className="hover:underline">Home</Link>
+        <Link href="/" className="hover:underline">Trang chủ</Link>
         <span className="mx-2">/</span>
-        <span>Products</span>
+        <span>Sản phẩm</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
 
         {/* Cột 1: Sidebar Bộ Lọc */}
-        <aside className="col-span-1">
-          <h2 className="text-xl font-semibold mb-6">Filters</h2>
-          <Accordion type="multiple" defaultValue={["category", "price"]} className="w-full">
-            <AccordionItem value="category">
-              <AccordionTrigger className="text-lg">Category</AccordionTrigger>
-              <AccordionContent className="flex flex-col gap-3 pt-3">
-                {categories.map((cat) => (
-                  <div key={cat._id} className="flex items-center space-x-2">
-                    <Link href={`/products?category=${cat.name}`} className="flex items-center space-x-2 w-full">
-                      <Checkbox id={cat._id} checked={categoryParam === cat.name} />
-                      <label htmlFor={cat._id} className="text-sm font-medium leading-none cursor-pointer">
-                        {cat.name}
-                      </label>
-                    </Link>
-                  </div>
-                ))}
-              </AccordionContent>
-            </AccordionItem>
-            <Separator className="my-4" />
-            <AccordionItem value="price">
-              <AccordionTrigger className="text-lg">Price Range</AccordionTrigger>
-              <AccordionContent className="flex flex-col gap-3 pt-3">
-                <FilterCheckbox id="price-1" label="$0 - $100" />
-                <FilterCheckbox id="price-2" label="$100 - $200" />
-                <FilterCheckbox id="price-3" label="$200+" />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </aside>
+        <ProductFilters categories={categories} />
 
         {/* Cột 2: Lưới Sản Phẩm */}
         <main className="col-span-3">
-          {/* Thanh Sắp xếp */}
+          {/* Nút Chọn toàn bộ */}
           <div className="flex justify-between items-center mb-6">
-            <span className="text-muted-foreground">Showing {products.length} results</span>
+            <div className="flex gap-4">
+              <Link href="/products">
+                <Button variant="secondary">Chọn toàn bộ</Button>
+              </Link>
+              <span className="text-muted-foreground self-center">Hiển thị {products.length} kết quả</span>
+            </div>
+
             <Select defaultValue="default">
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Sort by" />
+                <SelectValue placeholder="Sắp xếp" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="default">Default</SelectItem>
-                <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                <SelectItem value="newest">Newest Arrivals</SelectItem>
+                <SelectItem value="default">Mặc định</SelectItem>
+                <SelectItem value="price-asc">Giá: Thấp đến Cao</SelectItem>
+                <SelectItem value="price-desc">Giá: Cao đến Thấp</SelectItem>
+                <SelectItem value="newest">Mới nhất</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -143,12 +145,13 @@ export default async function ProductsPage({
           {products.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
               {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                // Fix key error: ensure id exists, fallback to _id if available in runtime data
+                <ProductCard key={product.id || (product as any)._id} product={product} />
               ))}
             </div>
           ) : (
             <div className="text-center text-muted-foreground py-16">
-              <p>No products found.</p>
+              <p>Không tìm thấy sản phẩm.</p>
             </div>
           )}
 
@@ -173,12 +176,3 @@ export default async function ProductsPage({
     </div>
   );
 }
-
-const FilterCheckbox = ({ id, label }: { id: string, label: string }) => (
-  <div className="flex items-center space-x-2">
-    <Checkbox id={id} />
-    <label htmlFor={id} className="text-sm font-medium leading-none cursor-pointer">
-      {label}
-    </label>
-  </div>
-);

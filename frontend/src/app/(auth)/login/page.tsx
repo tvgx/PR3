@@ -9,7 +9,7 @@ import { useAuthStore } from "@/src/store/auth.store";
 import Cookies from "js-cookie";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
-import { Link } from "lucide-react";
+import Link from "next/link";
 import { Separator } from "@radix-ui/react-dropdown-menu";
 
 export default function LogInPage() {
