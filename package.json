@@ -1,0 +1,29 @@
+{
+    "name": "pr3-root",
+    "version": "1.0.0",
+    "description": "Root package for PR3 application",
+    "scripts": {
+        "test": "jest -c test/jest.config.js",
+        "test:unit": "jest -c test/jest.config.js test/unit",
+        "test:integration": "jest -c test/jest.config.js test/integration",
+        "test:system": "jest -c test/jest.config.js test/system"
+    },
+    "dependencies": {
+        "@payos/node": "^2.0.4",
+        "bcryptjs": "^3.0.3",
+        "dotenv": "^16.3.0",
+        "express": "^5.2.1",
+        "http-status-codes": "^2.3.0",
+        "jsonwebtoken": "^9.0.2",
+        "mongoose": "^8.21.0",
+        "passport": "^0.7.0",
+        "passport-jwt": "^4.0.1",
+        "passport-local": "^1.0.0"
+    },
+    "devDependencies": {
+        "axios": "^1.6.0",
+        "jest": "^29.7.0",
+        "mongodb-memory-server": "^9.1.0",
+        "supertest": "^6.3.0"
+    }
+}
