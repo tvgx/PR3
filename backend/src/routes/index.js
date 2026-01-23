@@ -12,6 +12,15 @@ const eventRoutes = require('./event.routes');
 const dashboardRoutes = require('./dashboard.routes');
 const paymentRoutes = require('./payment.routes');
 
+// Health check endpoint for deployment monitoring
+router.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+    });
+});
+
 // Public routes
 router.use('/auth', authRoutes);
 router.use('/products', productRoutes);

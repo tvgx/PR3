@@ -15,9 +15,18 @@ const { PayOS } = require('@payos/node');
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
-// app.options('/*',cors());
-app.use(morgan('dev'));
+
+// CORS configuration with production support
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    process.env.FRONTEND_URL || 'http://localhost:3000'
+  ].filter(Boolean),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
 app.use(express.static(path.join(__dirname, 'public')));
 // Cấu hình Passport
 app.use(passport.initialize());
@@ -38,14 +47,31 @@ app.use((err, req, res, next) => {
   // Nếu là lỗi không phải do chúng ta định nghĩa, set 500
   if (!(err instanceof ApiError)) {
     statusCode = httpStatus.INTERNAL_SERVER_ERROR;
-    message = 'Internal Server Error';
+    message = process.env.NODE_ENV === 'production'
+      ? 'Internal Server Error'
+      : err.message || 'Internal Server Error';
   }
 
-  console.error(err); // Log lỗi ra console
+  // Log lỗi ra console với thông tin chi tiết trong production
+  if (process.env.NODE_ENV === 'production') {
+    console.error({
+      timestamp: new Date().toISOString(),
+      statusCode,
+      message: err.message,
+      path: req.path,
+      method: req.method,
+      stack: err.stack
+    });
+  } else {
+    console.error(err); // Log đầy đủ trong development
+  }
 
-  res.status(statusCode).send({
+  res.status(statusCode).json({
     code: statusCode,
-    message
+    message,
+    ...(process.env.NODE_ENV !== 'production' && {
+      stack: err.stack
+    })
   });
 });
 module.exports = app;

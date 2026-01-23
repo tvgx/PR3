@@ -19,7 +19,7 @@ import { Product } from "@/src/types";
 import { Category } from "@/src/types/category";
 import { ProductFilters } from "./ProductFilters";
 import { Button } from "@/src/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 async function getProducts(
   page: number = 1,

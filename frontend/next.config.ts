@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/uploads/:path*',
-        destination: 'http://localhost:8000/uploads/:path*', //TODO: change to production URL 
+        destination: `${process.env.NEXT_PUBLIC_API_GATEWAY_URL?.replace('/api', '') || 'http://localhost:8000'}/uploads/:path*`,
       },
     ];
   },

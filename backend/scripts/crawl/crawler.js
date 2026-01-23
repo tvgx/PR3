@@ -5,8 +5,11 @@ const puppeteer = require('puppeteer');
 const Category = require('../../src/models/category.model');
 const Product = require('../../src/models/product.model');
 
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
+
 // --- CẤU HÌNH ---
-const MONGO_URI = 'mongodb://127.0.0.1:27017/e-commerce'; // Thay tên DB của bạn vào đây
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/e-commerce';
 
 // DANH SÁCH URL CẦN CRAWL ĐÃ ĐƯỢC CẬP NHẬT
 const TARGET_URLS = [

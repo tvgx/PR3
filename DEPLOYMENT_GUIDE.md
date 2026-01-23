@@ -1,81 +1,27 @@
 # Deployment Guide
 
-This guide describes how to deploy the backend to a Kubernetes cluster and the frontend to Vercel.
+## Frontend (Vercel)
+1. **Import Project**: Connect your GitHub repository to Vercel.
+2. **Project Settings**:
+   - **Framework Preset**: Next.js
+   - **Root Directory**: `.` (Leave as default)
+   - **Build Command**: `npm run build:frontend`
+   - **Output Directory**: `frontend/.next`
+   - **Install Command**: `npm install`
+3. **Environment Variables**: Add any public env vars prefixed with `NEXT_PUBLIC_`.
 
-## Prerequisites
-- **Kubernetes Cluster**: A running cluster (e.g., Docker Desktop, Minikube).
-- **kubectl**: CLI tool configured to talk to your cluster.
-- **Vercel CLI**: For deploying the frontend (or use the Vercel GitHub integration).
-- **Drive D:/**: The backend uses `D:/` for persistent storage (configured in `backend/k8s/storage.yaml`). Ensure this drive exists and is shared/mountable by your K8s environment (e.g., in Docker Desktop settings > Resources > File Sharing).
+## Backend (Render)
+1. **Create Web Service**: Connect your GitHub repository to Render.
+2. **Settings**:
+   - **Runtime**: Node
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm run start:backend`
+   - **Root Directory**: `.` (Default)
+3. **Environment Variables**:
+   - `MONGO_URI`: Your MongoDB connection string.
+   - `JWT_SECRET`: Secret for JWT.
+   - Other variables from `.env`.
 
-## Backend Deployment (Kubernetes)
-
-### 1. Build Docker Image
-Build the backend image locally (if using a local cluster like Minikube/Docker Desktop, you might not need to push if you set `imagePullPolicy: Never` or `IfNotPresent` and build in the right context).
-
-```bash
-cd backend
-docker build -t backend:latest .
-```
-
-### 2. Configure Secrets
-The file `backend/k8s/secrets.yaml` contains placeholder values. Edit it with real secrets before applying, or create the secret manually:
-
-```bash
-kubectl apply -f backend/k8s/secrets.yaml
-```
-
-**TLS Secret**:
-To enable TLS for Ingress, you need a secret named `backend-tls`. You can generate a self-signed one for testing:
-
-```bash
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=backend.local"
-kubectl create secret tls backend-tls --key tls.key --cert tls.crt
-```
-
-### 3. Deploy
-Apply all manifests in the `backend/k8s` directory:
-
-```bash
-kubectl apply -f backend/k8s/
-```
-
-This will create:
-- **PersistentVolume & PVC**: Maps to `D:\k8s_data` (ensure Docker has permission).
-- **MongoDB**: Deployment + Service.
-- **Backend**: Deployment + Service + HPA.
-- **Ingress**: Routes `backend.local` to the backend service.
-
-### 4. Verify
-```bash
-kubectl get pods
-kubectl get svc
-kubectl get ingress
-```
-
-Add `127.0.0.1 backend.local` to your `C:\Windows\System32\drivers\etc\hosts` file to access the backend via `https://backend.local`.
-
-## Frontend Deployment (Vercel)
-
-The frontend is designed to be deployed on Vercel.
-
-### Option A: Vercel CLI
-1. Install Vercel CLI: `npm i -g vercel`
-2. Deploy:
-   ```bash
-   cd frontend
-   vercel
-   ```
-3. Follow the prompts. Set the environment variable `NEXT_PUBLIC_API_GATEWAY_URL` to your production backend URL (e.g., `https://backend.example.com` or your `ngrok` tunnel if testing locally).
-
-### Option B: GitHub Integration
-1. Push your code to GitHub.
-2. Go to [Vercel Dashboard](https://vercel.com/dashboard) -> Add New -> Project.
-3. Import your repository.
-4. Configure Build Settings:
-   - Framework: Next.js (detected automatically).
-   - Environment Variables:
-     - `NEXT_PUBLIC_API_GATEWAY_URL`: The URL of your deployed backend.
-
-## CI/CD
-A GitHub Actions workflow is provided in `.github/workflows/deploy.yml` which builds and pushes the backend image to GitHub Container Registry on push to `main`.
+## Notes
+- Ensure all dependencies are in the root `package.json`.
+- Both services will deploy from the same repository but use different commands.
