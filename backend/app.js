@@ -33,6 +33,25 @@ app.use(passport.initialize());
 configurePassport(passport); // Gọi hàm cấu hình passport
 
 // Định tuyến API
+// Root route - API information
+app.get('/', (req, res) => {
+  res.json({
+    message: 'PR3 E-Commerce API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      products: '/api/products',
+      categories: '/api/categories',
+      orders: '/api/orders',
+      users: '/api/users',
+      payment: '/api/payment'
+    },
+    documentation: 'https://github.com/tvgx/PR3'
+  });
+});
+
 // Gắn tất cả các route trong thư mục /routes vào tiền tố /api
 app.use('/api', allRoutes);
 
