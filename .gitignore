@@ -460,3 +460,4 @@ next-env.d.ts
 next.config.ts  
 error_log.txt   
 frontend/.next
+frontend/.env*.local
