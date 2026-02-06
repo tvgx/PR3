@@ -208,8 +208,8 @@ async function getOrCreateCategory(name, url) {
                         continue;
                     }
 
-                    // Chuẩn bị object để lưu vào DB
-                    const productDoc = new Product({
+                    // Chuẩn bị object cập nhật
+                    const productData = {
                         name: rawData.name,
                         description: rawData.description,
                         price: rawData.price,
@@ -221,11 +221,16 @@ async function getOrCreateCategory(name, url) {
                         rating: (Math.random() * 1.5 + 3.5).toFixed(1),
                         reviewCount: Math.floor(Math.random() * 50),
                         tags: rawData.tags
-                    });
+                    };
 
-                    // Lưu vào DB
-                    await productDoc.save();
-                    console.log(`   💾 Đã lưu: ${rawData.name} - ${rawData.price}đ`);
+                    // Upsert (Tìm theo name, nếu có thì update, chưa có thì insert)
+                    await Product.findOneAndUpdate(
+                        { name: rawData.name },
+                        productData,
+                        { upsert: true, new: true, setDefaultsOnInsert: true }
+                    );
+
+                    console.log(`   💾 Đã lưu/cập nhật: ${rawData.name} - ${rawData.price}đ`);
 
                     await sleep(500); // Nghỉ nhẹ giữa các request
 

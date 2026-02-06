@@ -25,6 +25,14 @@ const queryProducts = async (filters, options) => {
     query.tags = { $in: [filters.tag] };
   }
 
+  // Tìm kiếm theo từ khóa (name)
+  if (filters.search) {
+    // Escape special regex characters
+    const escapedSearch = filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const searchRegex = new RegExp(escapedSearch, 'i');
+    query.name = { $regex: searchRegex };
+  }
+
   // Lọc theo giá
   if (filters.minPrice || filters.maxPrice) {
     query.price = {};

@@ -12,9 +12,15 @@ const addItemToCart = catchAsync(async (req, res) => {
   res.status(200).json(cart);
 });
 
+const mergeCart = catchAsync(async (req, res) => {
+  const { items } = req.body; // Expecting { items: [{ id, quantity }, ...] }
+  const cart = await orderService.mergeCart(req.user.id, items);
+  res.status(200).json(cart);
+});
+
 const checkout = catchAsync(async (req, res) => {
-  const { shippingAddress } = req.body;
-  const order = await orderService.checkoutCart(req.user.id, shippingAddress);
+  const { shippingAddress, selectedProductIds } = req.body;
+  const order = await orderService.checkoutCart(req.user.id, shippingAddress, selectedProductIds);
   res.status(201).json(order);
 });
 
@@ -49,4 +55,5 @@ module.exports = {
   getAllOrders,
   updateItemQuantity,
   removeItemFromCart,
+  mergeCart,
 };

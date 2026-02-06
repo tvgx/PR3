@@ -4,6 +4,9 @@ const { requireAuth, requireAdmin } = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 router.use(requireAuth);
+router.route('/cart/merge')
+  .post(orderController.mergeCart);
+
 router.route('/cart')
   .get(orderController.getCart)
   .post(orderController.addItemToCart);
