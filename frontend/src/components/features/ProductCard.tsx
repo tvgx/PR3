@@ -19,7 +19,7 @@ export function ProductCard({ product }: ProductCardProps) {
             {/* Phần hình ảnh và icon */}
             <div className="relative bg-secondary/30 rounded-md overflow-hidden p-4">
                 <img
-                    src={product.imageUrl || "/vercel.svg"} // Dùng ảnh placeholder nếu không có
+                    src={product.imageUrl || "/placeholder.png"} // Dùng ảnh placeholder nếu không có
                     alt={product.name}
                     className="aspect-square w-full object-contain transition-transform duration-300 group-hover:scale-105"
                 />

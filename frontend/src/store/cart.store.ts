@@ -50,6 +50,14 @@ export const useCartStore = create<CartState>()(
       syncCart: async () => {
         set({ isLoading: true });
         try {
+          // [NEW] Merge strategy: If we have local items, send them to backend first
+          const localItems = get().items;
+          if (localItems.length > 0) {
+            const itemsToMerge = localItems.map(item => ({ id: item.id, quantity: item.quantity }));
+            await apiClient.post("/orders/cart/merge", { items: itemsToMerge });
+          }
+
+          // Then fetch the updated cart
           const { data } = await apiClient.get<{ items: BackendOrderItem[] }>("/orders/cart");
           const backendItems = data.items.map((item: BackendOrderItem) => ({
             id: item.productId,

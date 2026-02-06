@@ -78,7 +78,7 @@ export default function PaymentPage() {
             // by removing the selected items from the cart store manually after "success".
             return apiClient.post("/orders", {
                 shippingAddress: data.shippingAddress,
-                items: data.items, // If backend supports it
+                selectedProductIds: data.selectedProductIds, // Send IDs to backend
                 shippingMethod: data.shippingMethod,
                 paymentMethod: "cash"
             });
@@ -113,7 +113,7 @@ export default function PaymentPage() {
                 postalCode: postalCode,
                 country: country,
             },
-            items: selectedItems.map(item => ({ productId: item.id, quantity: item.quantity })),
+            selectedProductIds: selectedItems.map(item => item.id),
             shippingMethod,
         };
 

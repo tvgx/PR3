@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import Cookies from "js-cookie";
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/src/components/ui/skeleton";
+import { useCartStore } from "@/src/store/cart.store";
 
 export default function Header() {
   const router = useRouter();
@@ -34,6 +35,9 @@ export default function Header() {
 
   useEffect(() => {
     setIsMounted(true);
+    if (useAuthStore.getState().token) {
+      useCartStore.getState().syncCart();
+    }
   }, []);
 
   // ----- FIX LỖI VÒNG LẶP VÔ HẠN (Maximum update depth) -----
@@ -112,15 +116,32 @@ export default function Header() {
               type="search"
               placeholder="What are you looking for?"
               className="pr-10 bg-secondary/50 border-none"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  router.push(`/products?search=${e.currentTarget.value}`);
+                }
+              }}
             />
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Search
+              className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground cursor-pointer"
+              onClick={(e) => {
+                // Find sibling input and get value
+                const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                router.push(`/products?search=${input.value}`);
+              }}
+            />
           </div>
           <Button variant="ghost" size="icon">
             <Heart size={20} />
           </Button>
-          <Button asChild variant="ghost" size="icon">
+          <Button asChild variant="ghost" size="icon" className="relative">
             <Link href="/cart">
               <ShoppingCart size={20} />
+              {isMounted && useCartStore.getState().getTotalItems() > 0 && (
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  {useCartStore((state) => state.getTotalItems())}
+                </span>
+              )}
             </Link>
           </Button>
 

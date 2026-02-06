@@ -25,7 +25,8 @@ async function getProducts(
   limit: number = 30,
   category?: string,
   minPrice?: string,
-  maxPrice?: string
+  maxPrice?: string,
+  search?: string
 ): Promise<{ products: Product[]; totalPages: number }> {
   try {
     let url = `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8000/api'}/products?page=${page}&limit=${limit}`;
@@ -37,6 +38,9 @@ async function getProducts(
     }
     if (maxPrice) {
       url += `&maxPrice=${maxPrice}`;
+    }
+    if (search) {
+      url += `&search=${search}`;
     }
 
     const res = await fetch(url, { next: { revalidate: 60 } });
@@ -93,10 +97,11 @@ export default async function ProductsPage({
   const categoryParam = resolvedSearchParams?.category as string | undefined;
   const minPriceParam = resolvedSearchParams?.minPrice as string | undefined;
   const maxPriceParam = resolvedSearchParams?.maxPrice as string | undefined;
+  const searchParam = resolvedSearchParams?.search as string | undefined;
   const limit = 30;
 
   const [productData, categories] = await Promise.all([
-    getProducts(page, limit, categoryParam, minPriceParam, maxPriceParam),
+    getProducts(page, limit, categoryParam, minPriceParam, maxPriceParam, searchParam),
     getCategories(),
   ]);
 

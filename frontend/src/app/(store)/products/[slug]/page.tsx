@@ -77,7 +77,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             {(product.images && product.images.length > 0 ? product.images : [product.imageUrl]).map((img, index) => (
               <CarouselItem key={index} className="bg-secondary/30 rounded-md">
                 <img
-                  src={img || "/placeholder.svg"}
+                  src={img || "/placeholder.png"}
                   alt={`${product.name} image ${index + 1}`}
                   className="w-full h-[400px] object-contain p-8"
                 />

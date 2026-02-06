@@ -4,7 +4,7 @@ const features = [
   {
     icon: Truck,
     title: "FREE AND FAST DELIVERY",
-    description: "Free delivery for all orders over $140",
+    description: "Free delivery for all orders over 500k",
   },
   {
     icon: Headset,

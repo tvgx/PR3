@@ -76,7 +76,7 @@ export default function CartPage() {
 
                 {/* Product */}
                 <div className="flex items-center gap-4">
-                  <img src={item.imageUrl || "/placeholder.svg"} alt={item.name} className="w-14 h-14 object-cover rounded" />
+                  <img src={item.imageUrl || "/placeholder.png"} alt={item.name} className="w-14 h-14 object-cover rounded" />
                   <div className="flex flex-col">
                     <span className="font-medium">{item.name}</span>
                     <Button variant="ghost" size="sm" className="w-fit h-auto p-0 text-destructive md:hidden" onClick={() => removeItem(item.id)}>
