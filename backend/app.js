@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 const corsOptions = {
   origin: [
     'http://localhost:3000',
-    'https://pr3-backend.onrender.com/api',
+    'https://pr-3-pi.vercel.app',  // Fixed: Frontend URL, not backend
     process.env.FRONTEND_URL || 'http://localhost:3000'
   ].filter(Boolean),
   credentials: true,
